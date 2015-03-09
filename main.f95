@@ -29,13 +29,13 @@ program main
   call gnu_lattice_plot(S(1,:,:),1,'initial state')
  
   call system_clock(start_time)
-  do i = 1,100*N
+  do i = 1,steps
     do j = 1,n_br 
       call gen_config(S(j,:,:),dE(j),BJ,h)
     enddo
     
     BE_branch = BE_branch + dE
-    if (mod(i,5*N)==0) call sync_branches(S,BE_branch)
+    if (mod(i,s_intvl)==0) call sync_branches(S,BE_branch)
   enddo
   call system_clock(end_time)
   
