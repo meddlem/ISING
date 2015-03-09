@@ -2,7 +2,7 @@ module markov
   use constants
   implicit none
   private
-  public :: gen_config
+  public :: gen_config, sync_branches
 
 contains
   
@@ -51,5 +51,19 @@ contains
     call random_number(u)
     u = L*u + 0.5_dp
     x = nint(u) ! index of spin to flip
+  end subroutine
+
+  subroutine sync_branches(S,BE_branch)
+    ! select branch with lowest energy
+    integer, intent(inout) :: S(:,:,:)
+    real(dp), intent(inout) :: BE_branch(:)
+    integer :: i, branch
+
+    branch = minloc(BE_branch,1)
+    BE_branch = minval(BE_branch)
+
+    do i = 1,n_br
+      S(i,:,:) = S(branch,:,:)       
+    enddo
   end subroutine
 end module

@@ -11,4 +11,5 @@ module constants
 
   integer, parameter :: L = 100
   integer, parameter :: N = L**2
+  integer, parameter :: n_br = 2
 end module
