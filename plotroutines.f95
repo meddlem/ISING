@@ -11,7 +11,8 @@ contains
     integer :: ret
     
     ! creates fifo pipe: plotfifo.dat
-    call system("rm -f plotfifo.dat; mknod plotfifo.dat p",ret)     
+    call system("rm plotfifo.dat && mkfifo plotfifo.dat",ret) 
+    call system("cat plotfifo.dat > /dev/null &",ret) !Makes the pipe to function in osx
     
     call write_lattice(S) ! write spin config to pipe
     
