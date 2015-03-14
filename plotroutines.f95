@@ -12,9 +12,6 @@ contains
     
     ! creates fifo pipe: plotfifo.dat
     call system("rm plotfifo.dat && mkfifo plotfifo.dat",ret) 
-    call system("cat plotfifo.dat > /dev/null &",ret) !Makes the pipe to function in osx
-    
-    call write_lattice(S) ! write spin config to pipe
     
     ! create a gnuplot command file
     open(10,access = 'sequential',file = 'matplot.plt')
@@ -43,6 +40,9 @@ contains
     
     ! now fork instance of gnuplot to plot/animate the lattice
     call system("gnuplot matplot.plt &",ret)
+    
+    call write_lattice(S) ! write spin config to pipe
+
   end subroutine
   
   subroutine write_lattice(S)
