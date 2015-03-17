@@ -5,7 +5,8 @@ module plotroutines
   public :: line_plot, write_lattice, close_lattice_plot, animate_lattice
 
 contains
-  subroutine animate_lattice(title)
+  subroutine animate_lattice(S,title)
+    integer, intent(in) :: S(:,:)
     character(*), intent(in) :: title
     integer :: ret
     

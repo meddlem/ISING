@@ -10,6 +10,7 @@ PROG = main #program name
 #required objects: 
 OBJS =
 OBJS += constants.o
+OBJS += dataanalysis.o
 OBJS += plotroutines.o
 OBJS += io.o
 OBJS += initialize.o
