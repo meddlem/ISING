@@ -11,44 +11,25 @@ program main
   ! dE: change in energy between new and initial config
   ! h: external field
   ! S: array containing Spins indexed as row, column
-  ! dE_vals: contains all possible values of energy change
-  ! BF_vals: all possible values of the boltzmann factor of dE
 
-  real(dp) :: BJ, t(sweeps+1), BE(sweeps+1), BE_tmp, dE, h, dE_vals(9,2), &
-    BF_vals(9,2)
-  integer, allocatable :: S(:,:)
-  integer :: i, j, start_time, end_time, runtime
+  real(dp), allocatable :: BE(:)
+  real(dp)              :: BJ, h
+  integer, allocatable  :: S(:,:), m(:), t(:)
+  integer               :: runtime
   
-  allocate(S(L+2,L+2))
+  allocate(S(L+2,L+2),m(n_meas),t(n_meas),BE(n_meas))
+  
   call user_in(BJ,h)
   call init_random_seed()
   call init_lattice(S)
-  call init_energy(BE_tmp,S,BJ,h)
-  call init_vals(dE_vals,BF_vals,BJ,h)
-  call animate_lattice(S,'')
-
-  ! initialize some needed variables
-  j = 1
-  BE(j) = BE_tmp
-  t = (/(i,i=0,sweeps)/)
-
-  call system_clock(start_time)
-  do i=1,steps
-    call gen_config(S,dE,dE_vals,BF_vals)
-    BE_tmp = BE_tmp + dE
-
-    if (mod(i,N) == 0) then 
-      j = j+1
-      BE(j) = BE_tmp ! record energy every sweep
-      call write_lattice(S) ! write lattice to pipe
-    endif
-  enddo
-  call system_clock(end_time)
-
-  runtime = (end_time - start_time)/1000
-
+  call animate_lattice('')
+  
+  call run_sim(S,BE,BJ,h,t,m,runtime)
+  
   call close_lattice_plot()
-  call results_out(BJ,BE_tmp,BE(1),h,runtime)
-  call line_plot(t,BE,'t','energy','','',1)
-  deallocate(S)
+  call results_out(BJ,BE(n_meas),h,runtime)
+  call line_plot(real(t,dp),BE,'t','energy','','',1)
+  call line_plot(real(t,dp),real(m,dp),'t','magnetization','','',2)
+  
+  deallocate(S,m,t,BE)
 end program
