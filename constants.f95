@@ -12,6 +12,12 @@ module constants
   integer, parameter :: L = 100 ! lattice side
   integer, parameter :: N = L**2 ! number of spins
 
-  integer, parameter :: sweeps = 10000 ! number of sweeps through lattice 
-  integer, parameter :: steps = sweeps*N ! number of iterations
+  integer, parameter :: meas_step = 10 ! interval between measurements
+  integer, parameter :: steps = 100000 ! number of iterations
+  integer, parameter :: n_meas = steps/meas_step ! total number of measurements
+  integer, parameter :: meas_start = 1000 ! start measurement after .. steps 
+  integer, parameter :: plot_interval = 100 ! plot every .. steps
+
+  integer, parameter :: n_corr = 30 ! number of spins to calculate correlation over (diagonal elements)
+  integer, parameter :: r_max = 20 ! distances over which to calc correlation function
 end module
