@@ -38,9 +38,6 @@ contains
     
     ! now fork instance of gnuplot to plot/animate the lattice
     call system("gnuplot matplot.plt &",ret)
-    
-    call write_lattice(S) ! write spin config to pipe
-
   end subroutine
   
   subroutine write_lattice(S)
