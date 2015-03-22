@@ -12,6 +12,7 @@ OBJS =
 OBJS += constants.o
 OBJS += dataanalysis.o
 OBJS += plotroutines.o
+OBJS += main_routines.o
 OBJS += io.o
 OBJS += initialize.o
 OBJS += markov.o
