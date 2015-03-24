@@ -16,8 +16,8 @@ contains
     write(*,'(A)') "Running simulation..."
   end subroutine
 
-  subroutine results_out(BJ,BE,h,runtime,alpha) 
-    real(dp), intent(in) :: BJ, BE, h, alpha
+  subroutine results_out(BJ,BE,h,runtime,alpha, chi, Cv) 
+    real(dp), intent(in) :: BJ, BE, h, alpha, chi, Cv
     integer, intent(in) :: runtime
 
     open(12,access = 'sequential',file = 'output.txt')
@@ -29,6 +29,8 @@ contains
       write(12,'(A,I6,A)') "Runtime : ", runtime, " s"
       write(12,*) "Final Energy", BE
       write(12,*) "alpha: ", alpha
+      write(12,*) "specific heat", Cv
+      write(12,*) "(unsubtracted) susceptibility", chi
       write(12,'(/,A,/)') '*******************************' 
     close(12)
     

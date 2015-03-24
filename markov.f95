@@ -7,13 +7,13 @@ module markov
   public :: run_sim
 
 contains
-  subroutine run_sim(S,BE,BJ,h,t,r,m,runtime,c_ss,c_ss_fit,alpha)
+  subroutine run_sim(S,BE,BJ,h,t,r,m,runtime,c_ss,c_ss_fit,alpha, chi, Cv)
     integer, intent(inout) :: S(:,:)
     real(dp), intent(inout) :: BE(:), BJ, h
     integer, intent(out) :: t(:), m(:), runtime
-    real(dp), intent(out) :: c_ss(:), r(:), c_ss_fit(:), alpha
+    real(dp), intent(out) :: c_ss(:), r(:), c_ss_fit(:), alpha, chi, Cv
 
-    integer :: i, j, start_time, m_tmp, end_time
+    integer :: i, j, start_time, m_tmp, s_cl(1:steps), s_cl_tmp, end_time
     real(dp), allocatable :: g(:,:)
     real(dp) :: p, offset, err_alpha
     
@@ -27,8 +27,9 @@ contains
 
     call system_clock(start_time)
     do i=1,steps
-      call gen_config(S,m_tmp,p)
+      call gen_config(S,m_tmp, s_cl_tmp, p)
 
+      s_cl(i) = s_cl_tmp ! clustersize array
       if (mod(i,meas_step) == 0) then
         j = j+1
         m(j) = m_tmp
@@ -41,6 +42,12 @@ contains
     call system_clock(end_time)
     runtime = (end_time - start_time)/1000
     
+    ! calculate susceptibility
+    chi = 0d0*sum(s_cl)/steps
+
+    ! calculate specific heat
+    Cv = (dot_product(BE(meas_start:steps),BE(meas_start:steps))+sum(BE(meas_start:steps)))/(steps-meas_start)
+
     ! calculate correlation function 
     c_ss = sum(g(meas_start:n_meas,:),1)/(n_meas-meas_start) 
     call lin_fit(alpha,err_alpha,offset,-log(c_ss),log(r))
@@ -49,13 +56,13 @@ contains
     deallocate(g)
   end subroutine
 
-  subroutine gen_config(S,m,p)
+  subroutine gen_config(S,m, s_cl, p)
     integer, intent(inout) :: S(:,:)
-    integer, intent(out) :: m
+    integer, intent(out) :: m, s_cl ! export cluster size for estimator of susceptibility
     real(dp), intent(in) :: p
 
     integer, allocatable :: C(:,:)
-    integer :: i, j, S_init, s_cl, x(2), nn(4,2)
+    integer :: i, j, S_init, x(2), nn(4,2)
     
     allocate(C(N,2))
     ! initialize variables 
@@ -162,4 +169,5 @@ contains
 
     g = sum(g_tmp,1)/n_corr 
   end subroutine
+
 end module
