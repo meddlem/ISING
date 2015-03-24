@@ -9,6 +9,8 @@ module constants
   integer, parameter :: dp = selected_real_kind(15,307)
   integer, parameter :: lng = selected_int_kind(8)
 
+  real(dp), parameter :: Kb = 1 ! Boltzmann constant
+
   integer, parameter :: L = 100 ! lattice side
   integer, parameter :: N = L**2 ! number of spins
 

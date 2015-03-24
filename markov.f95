@@ -43,10 +43,10 @@ contains
     runtime = (end_time - start_time)/1000
     
     ! calculate susceptibility
-    chi = 0d0*sum(s_cl)/steps
+    chi = 1d0/N*sum(s_cl)/steps
 
     ! calculate specific heat
-    Cv = (dot_product(BE(meas_start:steps),BE(meas_start:steps))+sum(BE(meas_start:steps)))/(steps-meas_start)
+    Cv = Kb/N*(dot_product(BE(:),BE(:))+sum(BE(:)))/(j)
 
     ! calculate correlation function 
     c_ss = sum(g(meas_start:n_meas,:),1)/(n_meas-meas_start) 
