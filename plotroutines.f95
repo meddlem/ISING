@@ -9,6 +9,7 @@ contains
     character(*), intent(in) :: title
     integer :: ret
     
+    print *, 'animating lattice'
     ! creates fifo pipe: plotfifo.dat
     call system("rm -f plotfifo.dat; mkfifo plotfifo.dat",ret)     
     
@@ -40,8 +41,8 @@ contains
     call system("gnuplot matplot.plt &",ret)
   end subroutine
   
-  subroutine write_lattice(S)
-    integer, intent(in) :: S(:,:)
+  subroutine write_lattice(S, L)
+    integer, intent(in) :: S(:,:), L
     integer :: i, j
     character(30) :: rowfmt
     write(rowfmt, '(A,I4,A)') '(',L,'(1X,I3))' 

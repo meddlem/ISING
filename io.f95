@@ -5,14 +5,19 @@ module io
   public :: user_in, results_out
 contains
 
-  subroutine user_in(BJ,h)
-    real(dp), intent(out) :: BJ, h
+  subroutine user_in(BJ,L,N)
+    real(dp), intent(out) :: BJ
+    integer, intent(out)  :: L, N
+    real(dp)              :: L_tmp
   
     write(*,'(/,A,/)') '************ Input *************' 
     write(*,'(A)',advance='no') "Beta*J = " 
     read(*,*) BJ
-    write(*,'(A)',advance='no') "h = " 
-    read(*,*) h
+    write(*,'(A)',advance='no') "L = " 
+    read(*,*) L_tmp
+    L = int(L_tmp)
+    N = L**2
+    print *, BJ, L
     write(*,'(A)') "Running simulation..."
   end subroutine
 

@@ -11,8 +11,8 @@ module constants
 
   real(dp), parameter :: Kb = 1 ! Boltzmann constant
 
-  integer, parameter :: L = 100 ! lattice side
-  integer, parameter :: N = L**2 ! number of spins
+  !integer, parameter :: L = 100 ! lattice side
+  !integer, parameter :: N = L**2 ! number of spins
 
   integer, parameter :: meas_step = 10 ! interval between measurements
   integer, parameter :: steps = 100000 ! number of iterations

@@ -20,10 +20,14 @@ contains
     BF_vals = exp(-dE_vals)
   end subroutine
 
-  subroutine init_lattice(S)
-    integer, intent(out) :: S(:,:)
+  subroutine init_lattice(S, L)
+
+    integer, intent(out)  :: S(:,:)
     real(dp), allocatable :: u(:,:)
+    integer, intent(in)  :: L
     ! assign initial spins at random, corresponds to T=∞ 
+
+    print *, 'initializing lattice'
 
     allocate(u(L,L))
     S = -1
@@ -39,6 +43,8 @@ contains
     integer, allocatable :: seed(:)
     integer :: i, m, un, istat, dtime(8), pid, t(2), s
     integer(8) :: count, tms
+
+    print *, 'initializing random seed'
 
     call random_seed(size = m)
     allocate(seed(m))

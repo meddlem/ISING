@@ -7,46 +7,52 @@ module markov
   public :: run_sim
 
 contains
-  subroutine run_sim(S,BE,BJ,h,t,r,m,runtime,c_ss,c_ss_fit,alpha, chi, Cv)
-    integer, intent(inout) :: S(:,:)
-    real(dp), intent(inout) :: BE(:), BJ, h
-    integer, intent(out) :: t(:), m(:), runtime
-    real(dp), intent(out) :: c_ss(:), r(:), c_ss_fit(:), alpha, chi, Cv
+  subroutine run_sim(S, L, BE,BJ,h,t,r,m,runtime,c_ss,c_ss_fit,alpha, chi, Cv)
+    integer, intent(inout)  :: S(:,:)
+    real(dp), intent(inout) :: BE(:), BJ
+    real(dp), intent(in)    :: h
+    integer, intent(in)    :: L
+    integer, intent(out)    :: t(:), m(:), runtime
+    real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), alpha, chi, Cv
 
     integer :: i, j, start_time, m_tmp, s_cl(1:steps), s_cl_tmp, end_time
     real(dp), allocatable :: g(:,:)
     real(dp) :: p, offset, err_alpha
     
+    print*, 'running markov chain'
+
     allocate(g(n_meas,r_max))
     ! initialize needed variables
     j = 0
-    h = 0._dp ! overwrite user setting, just in case 
+    !h = 0._dp ! overwrite user setting, just in case 
     t = (/(i,i=0,n_meas-1)/)
     r = real((/(i,i=1,r_max)/),dp)
     p = 1 - exp(-2._dp*BJ)
 
     call system_clock(start_time)
     do i=1,steps
-      call gen_config(S,m_tmp, s_cl_tmp, p)
+      call gen_config(S,L,m_tmp, s_cl_tmp, p)
+
+      print *, 'calculating thermodynamic properties'
 
       s_cl(i) = s_cl_tmp ! clustersize array
       if (mod(i,meas_step) == 0) then
         j = j+1
         m(j) = m_tmp
-        call s_corr(g(j,:),S)
-        call calc_energy(BE(j),S,BJ,h)
+        call s_corr(g(j,:),S, L)
+        call calc_energy(BE(j),S,L,BJ,h)
       endif
 
-      if (mod(i,plot_interval) == 0) call write_lattice(S) ! write lattice to pipe
+      if (mod(i,plot_interval) == 0) call write_lattice(S, L) ! write lattice to pipe
     enddo    
     call system_clock(end_time)
     runtime = (end_time - start_time)/1000
     
     ! calculate susceptibility
-    chi = 1d0/N*sum(s_cl)/steps
+    chi = 1d0/L**(2)*sum(s_cl)/steps
 
     ! calculate specific heat
-    Cv = Kb/N*(dot_product(BE(:),BE(:))+sum(BE(:)))/(j)
+    Cv = Kb/L**(2)*(dot_product(BE(:),BE(:))+sum(BE(:)))/(j)
 
     ! calculate correlation function 
     c_ss = sum(g(meas_start:n_meas,:),1)/(n_meas-meas_start) 
@@ -56,20 +62,23 @@ contains
     deallocate(g)
   end subroutine
 
-  subroutine gen_config(S,m, s_cl, p)
+  subroutine gen_config(S,L,m, s_cl, p)
     integer, intent(inout) :: S(:,:)
     integer, intent(out) :: m, s_cl ! export cluster size for estimator of susceptibility
     real(dp), intent(in) :: p
+    integer, intent(in)  :: L
 
     integer, allocatable :: C(:,:)
     integer :: i, j, S_init, x(2), nn(4,2)
+
+    print *, 'running gen_config'
     
-    allocate(C(N,2))
+    allocate(C(L**2,2))
     ! initialize variables 
     i = 1 ! labels spin in cluster
     s_cl = 1 ! number of spins in cluster
     C = 0 ! init array that holds indices of all spins in cluster
-    call random_spin(x) ! start cluster by choosing 1 spin
+    call random_spin(x,L) ! start cluster by choosing 1 spin
 
     S_init = S(x(1),x(2)) ! save state of chosen spin
     C(1,:) = x ! add chosen spin to cluster     
@@ -77,7 +86,7 @@ contains
     
     do while (i<=s_cl)
       x = C(i,:) ! pick a spin x in the cluster
-      nn = nn_idx(x) ! get nearest neighbors of spin x
+      nn = nn_idx(x,L) ! get nearest neighbors of spin x
       
       do j = 1,4 ! iterate over neighbors of x
         call try_add(S,C,s_cl,S_init,nn(j,:),p)
@@ -93,8 +102,9 @@ contains
     integer, intent(inout) :: S(:,:), s_cl, C(:,:)
     integer, intent(in) :: S_init, s_idx(:)
     real(dp), intent(in) :: p
-
     real(dp) :: r
+
+    !print *, 'running try_add'
 
     if (S(s_idx(1),s_idx(2)) == S_init) then 
       call random_number(r)
@@ -108,9 +118,9 @@ contains
     endif
   end subroutine
 
-  pure subroutine calc_energy(BE,S,BJ,h)
+  pure subroutine calc_energy(BE,S,L,BJ,h)
     real(dp), intent(out) :: BE
-    integer, intent(in) :: S(:,:)
+    integer, intent(in) :: S(:,:), L
     real(dp), intent(in) :: h, BJ
 
     integer :: i, j, k, nn(4,2)
@@ -121,7 +131,7 @@ contains
 
     do i = 1,L
       do j = 1,L
-        nn = nn_idx([i,j]) ! get nearest neighbors of spin i,j
+        nn = nn_idx([i,j],L) ! get nearest neighbors of spin i,j
         do k = 1,4
           BE = BE - BJ*S(i,j)*S(nn(k,1),nn(k,2))
         enddo
@@ -132,9 +142,9 @@ contains
     BE = BE - h*sum(S) ! add external field
   end subroutine
   
-  pure function nn_idx(x)
+  pure function nn_idx(x, L)
     ! returns indices of nearest neighbors of x_ij, accounting for PBC
-    integer, intent(in) :: x(2)
+    integer, intent(in) :: x(2), L
     integer :: nn_idx(4,2)
 
     nn_idx(1,:) = merge(x + [1,0], [1,x(2)], x(1) /= L)
@@ -143,9 +153,10 @@ contains
     nn_idx(4,:) = merge(x - [0,1], [x(1),L], x(2) /= 1) 
   end function
   
-  subroutine random_spin(x)
+  subroutine random_spin(x, L)
     ! returns index of randomly picked spin
     integer, intent(out) :: x(:)
+    integer, intent(in)  :: L
 
     real(dp) :: u(2)
 
@@ -154,9 +165,10 @@ contains
     x = nint(u) ! index of spin to flip
   end subroutine
 
-  pure subroutine s_corr(g,S)
+  pure subroutine s_corr(g,S,L)
     real(dp), intent(out) :: g(:)
-    integer, intent(in) :: S(:,:)
+    integer, intent(in)   :: S(:,:)
+    integer, intent(in)  :: L
     real(dp) :: g_tmp(n_corr,r_max)
     integer :: i, r_0, r_1
      
