@@ -7,17 +7,18 @@ module markov
   public :: run_sim
 
 contains
-  subroutine run_sim(S,BE,BJ,h,t,r,m,runtime,c_ss,c_ss_fit,nu)
+  subroutine run_sim(S,BE,BJ,h,t,r,m,runtime,c_ss,c_ss_fit,nu,Xi)
     integer, intent(inout) :: S(:,:)
     real(dp), intent(inout) :: BE(:), BJ, h
     integer, intent(out) :: t(:), m(:), runtime
-    real(dp), intent(out) :: c_ss(:), r(:), c_ss_fit(:), nu
+    real(dp), intent(out) :: c_ss(:), r(:), c_ss_fit(:), nu, Xi
 
-    integer :: i, j, start_time, m_tmp, end_time
+    integer :: i, j, start_time, m_tmp, end_time, N_SWC_tmp
+    integer, allocatable :: N_SWC(:)
     real(dp), allocatable :: g(:,:)
     real(dp) :: p, offset, err_nu
     
-    allocate(g(n_meas,r_max))
+    allocate(g(n_meas,r_max),N_SWC(n_meas))
     ! initialize needed variables
     j = 0
     h = 0._dp ! overwrite user setting, just in case 
@@ -27,11 +28,12 @@ contains
 
     call system_clock(start_time)
     do i=1,steps
-      call gen_config(S,m_tmp,p)
+      call gen_config(S,m_tmp,N_SWC_tmp,p)
 
       if (mod(i,meas_step) == 0) then
         j = j+1
         m(j) = m_tmp
+        N_SWC(j) = N_SWC_tmp
         call s_corr(g(j,:),S)
         call calc_energy(BE(j),S,BJ,h)
       endif
@@ -46,21 +48,24 @@ contains
     call lin_fit(nu,err_nu,offset,-log(c_ss),log(r))
     c_ss_fit = exp(-offset)*r**(-nu)
 
-    deallocate(g)
+    ! calc susceptibility
+    Xi = sum(N_SWC**2/N)/n_meas ! klopt alleen voor T>T_c 
+
+    deallocate(g,N_SWC)
   end subroutine
 
-  subroutine gen_config(S,m,p)
+  subroutine gen_config(S,m,N_SWC,p)
     integer, intent(inout) :: S(:,:)
-    integer, intent(out) :: m
+    integer, intent(out) :: m, N_SWC
     real(dp), intent(in) :: p
 
     integer, allocatable :: C(:,:)
-    integer :: i, j, S_init, s_cl, x(2), nn(4,2)
+    integer :: i, j, S_init, x(2), nn(4,2)
     
     allocate(C(N,2))
     ! initialize variables 
     i = 1 ! labels spin in cluster
-    s_cl = 1 ! number of spins in cluster
+    N_SWC = 1 ! number of spins in cluster
     C = 0 ! init array that holds indices of all spins in cluster
     call random_spin(x) ! start cluster by choosing 1 spin
 
@@ -68,12 +73,12 @@ contains
     C(1,:) = x ! add chosen spin to cluster     
     S(x(1),x(2)) = -S_init ! flip initial spin
     
-    do while (i<=s_cl)
+    do while (i<=N_SWC)
       x = C(i,:) ! pick a spin x in the cluster
       nn = nn_idx(x) ! get nearest neighbors of spin x
       
       do j = 1,4 ! iterate over neighbors of x
-        call try_add(S,C,s_cl,S_init,nn(j,:),p)
+        call try_add(S,C,N_SWC,S_init,nn(j,:),p)
       enddo
       i = i+1 ! move to next spin in cluster
     enddo
@@ -82,8 +87,8 @@ contains
     deallocate(C)
   end subroutine
 
-  subroutine try_add(S,C,s_cl,S_init,s_idx,p)
-    integer, intent(inout) :: S(:,:), s_cl, C(:,:)
+  subroutine try_add(S,C,N_SWC,S_init,s_idx,p)
+    integer, intent(inout) :: S(:,:), N_SWC, C(:,:)
     integer, intent(in) :: S_init, s_idx(:)
     real(dp), intent(in) :: p
 
@@ -93,9 +98,9 @@ contains
       call random_number(r)
 
       if (r<p) then ! add spin to cluster with probability p
-        s_cl = s_cl+1
+        N_SWC = N_SWC+1
 
-        C(s_cl,:) = s_idx 
+        C(N_SWC,:) = s_idx 
         S(s_idx(1),s_idx(2)) = -S_init ! flip spin
       endif
     endif
