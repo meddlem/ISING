@@ -24,12 +24,12 @@ contains
 
     integer, intent(out)  :: S(:,:)
     real(dp), allocatable :: u(:,:)
-    integer, intent(in)  :: L
+    integer, intent(in)   :: L
     ! assign initial spins at random, corresponds to T=∞ 
 
     print *, 'initializing lattice'
 
-    allocate(u(L,L))
+    allocate(u(1:L, 1:L))
     S = -1
 
     call random_number(u)

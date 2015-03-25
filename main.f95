@@ -17,10 +17,12 @@ program main
   integer, allocatable  :: S(:,:), m(:), t(:)
   integer               :: runtime, L, N
   
-  allocate(S(L,L),m(n_meas),t(n_meas),BE(n_meas),c_ss(r_max),&
+  allocate(m(n_meas),t(n_meas),BE(n_meas),c_ss(r_max),&
     c_ss_fit(r_max),r(r_max))
   
   call user_in(BJ,L,N)
+  allocate(S(L,L))
+
   call init_random_seed()
   call init_lattice(S,L)
   call animate_lattice('')

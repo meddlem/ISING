@@ -33,7 +33,7 @@ contains
     do i=1,steps
       call gen_config(S,L,m_tmp, s_cl_tmp, p)
 
-      print *, 'calculating thermodynamic properties'
+     ! print *, 'calculating thermodynamic properties'
 
       s_cl(i) = s_cl_tmp ! clustersize array
       if (mod(i,meas_step) == 0) then
@@ -71,7 +71,7 @@ contains
     integer, allocatable :: C(:,:)
     integer :: i, j, S_init, x(2), nn(4,2)
 
-    print *, 'running gen_config'
+   ! print *, 'running gen_config'
     
     allocate(C(L**2,2))
     ! initialize variables 
