@@ -34,8 +34,8 @@ contains
 
       if ((mod(i,meas_step) == 0) .and. (i > meas_start)) then
         j = j+1
-        m(j) = m_tmp
-        N_SWC(j) = N_SWC_tmp ! clustersize array
+        m(j) = m_tmp ! record magnetization
+        N_SWC(j) = N_SWC_tmp ! record clustersize
 
         call s_corr(g(j,:),S,L,r_max,n_corr)
         call calc_energy(BE(j),S,L,BJ,h)
@@ -49,6 +49,7 @@ contains
     N_SWC_avg = sum(real(N_SWC,dp))/n_meas
     Mag = 0._dp
     if (N_SWC_avg > (L**2)/2) Mag = sum(real(abs(m),dp))/(n_meas*L**2)
+    ! misschien beter Mag returnen??
 
     ! calculate susceptibility
     chi = N_SWC_avg/L**2 - Mag**2

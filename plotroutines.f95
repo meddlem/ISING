@@ -23,6 +23,8 @@ contains
       write(10,*) 'set palette maxcolors 2'
       write(10,*) 'set palette defined ( -1 "#751975", 1 "#FF6600")'
       write(10,*) 'set cbrange [-1:1]'
+      write(10,*) 'set border 0'
+      write(10,*) 'unset tics'
       write(10,*) 'set cbtics ("+" 1, "-" -1)'
       write(10,*) 'set title "'//TRIM(title)//'"'
       write(10,*) 'set pm3d map'
@@ -32,7 +34,7 @@ contains
     ! create plot/animate instruction
     open(10,access = 'sequential', file = 'loop.plt')
       write(10,*) 'splot "< cat plotfifo.dat" matrix with image'
-      write(10,*) 'pause 0.2'
+      write(10,*) 'pause 0.3'
       write(10,*) 'reread'
     close(10)
     
