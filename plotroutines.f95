@@ -32,7 +32,7 @@ contains
     ! create plot/animate instruction
     open(10,access = 'sequential', file = 'loop.plt')
       write(10,*) 'splot "< cat plotfifo.dat" matrix with image'
-      write(10,*) 'pause 0.1'
+      write(10,*) 'pause 0.2'
       write(10,*) 'reread'
     close(10)
     

@@ -16,12 +16,12 @@ contains
     integer, intent(out)    :: t(:), m(:), runtime
     real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), alpha, chi, Cv
 
-    integer :: i, j, start_time, m_tmp, N_SWC(1:steps),&
-      N_SWC_tmp, end_time
-    real(dp), allocatable :: g(:,:)
-    real(dp) :: p, offset, err_alpha
+    integer, allocatable    :: N_SWC(:)
+    real(dp), allocatable   :: g(:,:)
+    integer  :: i, j, start_time, m_tmp, N_SWC_tmp, end_time
+    real(dp) :: p, Mag, N_SWC_avg, offset, err_alpha
     
-    allocate(g(n_meas,r_max))
+    allocate(g(n_meas,r_max),N_SWC(n_meas))
     ! initialize needed variables
     j = 0
     t = (/(i,i=0,n_meas-1)/)
@@ -32,31 +32,38 @@ contains
     do i=1,steps
       call gen_config(S,L,m_tmp, N_SWC_tmp, p)
 
-      N_SWC(i) = N_SWC_tmp ! clustersize array
-      if (mod(i,meas_step) == 0) then
+      if ((mod(i,meas_step) == 0) .and. (i > meas_start)) then
         j = j+1
         m(j) = m_tmp
+        N_SWC(j) = N_SWC_tmp ! clustersize array
+
         call s_corr(g(j,:),S,L,r_max,n_corr)
         call calc_energy(BE(j),S,L,BJ,h)
       endif
 
-      if (mod(i,plot_interval) == 0) call write_lattice(S, L) ! write lattice to pipe
+      if (mod(i,plot_interval) == 0) call write_lattice(S,L) ! pipe
     enddo    
     call system_clock(end_time)
     runtime = (end_time - start_time)/1000
-    
-    ! calculate susceptibility
-    chi = 1._dp/L**(2)*sum(N_SWC)/steps
 
-    ! calculate specific heat
-    Cv = Kb/L**(2)*(dot_product(BE(:),BE(:))+sum(BE(:)))/(j)
+    N_SWC_avg = sum(real(N_SWC,dp))/n_meas
+    Mag = 0._dp
+    if (N_SWC_avg > (L**2)/2) Mag = sum(real(abs(m),dp))/(n_meas*L**2)
+
+    ! calculate susceptibility
+    chi = N_SWC_avg/L**2 - Mag**2
+    !chi_alt = 1._dp/L**2*sum(real(m,dp)**2)/(n_meas*L**2)
+
+    ! calculate specific heat, per particle
+    Cv = sum(BE**2)/n_meas - sum(BE/n_meas)**2
+    Cv = Cv/L**2
 
     ! calculate correlation function 
-    c_ss = sum(g(meas_start:n_meas,:),1)/(n_meas-meas_start) 
+    c_ss = sum(g,1)/n_meas 
     call lin_fit(alpha,err_alpha,offset,-log(c_ss),log(r))
     c_ss_fit = exp(-offset)*r**(-alpha)
 
-    deallocate(g)
+    deallocate(g,N_SWC)
   end subroutine
 
   subroutine gen_config(S,L,m, N_SWC, p)
