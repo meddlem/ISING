@@ -5,9 +5,9 @@ module io
   public :: user_in, results_out
 contains
 
-  subroutine user_in(BJ,L,N)
+  subroutine user_in(BJ,L,N,r_max,n_corr)
     real(dp), intent(out) :: BJ
-    integer, intent(out)  :: L, N
+    integer, intent(out)  :: L, N, r_max, n_corr
     real(dp)              :: L_tmp
   
     write(*,'(/,A,/)') '************ Input *************' 
@@ -15,10 +15,13 @@ contains
     read(*,*) BJ
     write(*,'(A)',advance='no') "L = " 
     read(*,*) L_tmp
+    write(*,'(A)') "Running simulation..."
+    
     L = int(L_tmp)
     N = L**2
-    print *, BJ, L
-    write(*,'(A)') "Running simulation..."
+    n_corr = L/3 ! number of spins used to calculate correlation
+    r_max = L/4 ! distances over which to calc correlation function
+
   end subroutine
 
   subroutine results_out(BJ,BE,h,runtime,alpha, chi, Cv) 

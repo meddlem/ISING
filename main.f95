@@ -13,21 +13,20 @@ program main
   ! S: array containing Spins indexed as row, column
 
   real(dp), allocatable :: BE(:), c_ss(:), r(:), c_ss_fit(:)
-  real(dp)              :: BJ, alpha, chi, Cv, h = 0
+  real(dp)              :: BJ, alpha, chi, Cv, h = 0._dp
   integer, allocatable  :: S(:,:), m(:), t(:)
-  integer               :: runtime, L, N
+  integer               :: runtime, L, N, r_max, n_corr
   
-  allocate(m(n_meas),t(n_meas),BE(n_meas),c_ss(r_max),&
+  call user_in(BJ,L,N,r_max,n_corr)
+  allocate(S(L,L),m(n_meas),t(n_meas),BE(n_meas),c_ss(r_max),&
     c_ss_fit(r_max),r(r_max))
-  
-  call user_in(BJ,L,N)
-  allocate(S(L,L))
 
   call init_random_seed()
   call init_lattice(S,L)
   call animate_lattice('')
   
-  call run_sim(S,L,BE,BJ,h,t,r,m,runtime,c_ss,c_ss_fit,alpha, chi, Cv)
+  call run_sim(S,L,r_max,n_corr,BE,BJ,h,t,r,m,runtime,c_ss,c_ss_fit,alpha,&
+    chi, Cv)
   
   call close_lattice_plot()
   call results_out(BJ,BE(n_meas),h,runtime,alpha, chi, Cv)

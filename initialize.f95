@@ -5,36 +5,28 @@ module initialize
   public :: init_random_seed, init_lattice, init_vals
 
 contains
-  subroutine init_vals(dE_vals,BF_vals,BJ,h)
+  pure subroutine init_vals(dE_vals,BF_vals,BJ,h)
     real(dp), intent(out) :: dE_vals(:,:), BF_vals(:,:)
     real(dp), intent(in) :: BJ, h
     integer :: i, j 
 
     ! calculate possible values of dE and boltzmann factor 
-    do i=1,9
-      do j=1,2 
-        dE_vals(i,j) = - 2._dp*BJ*(i-5) - 2._dp*h*(j*2-3) 
-      enddo
-    enddo
+    forall (i=1:9,j=1:2) dE_vals(i,j) = - 2._dp*BJ*(i-5) - 2._dp*h*(j*2-3) 
         
     BF_vals = exp(-dE_vals)
   end subroutine
 
   subroutine init_lattice(S, L)
-
     integer, intent(out)  :: S(:,:)
     real(dp), allocatable :: u(:,:)
     integer, intent(in)   :: L
     ! assign initial spins at random, corresponds to T=∞ 
 
-    print *, 'initializing lattice'
-
     allocate(u(1:L, 1:L))
-    S = -1
-
     call random_number(u)
+    
+    S = -1
     where (u > 0.5_dp) S = 1
-    ! if (u(1,1)>0.5_dp) S = 1
     deallocate(u)
   end subroutine 
 
@@ -43,8 +35,6 @@ contains
     integer, allocatable :: seed(:)
     integer :: i, m, un, istat, dtime(8), pid, t(2), s
     integer(8) :: count, tms
-
-    print *, 'initializing random seed'
 
     call random_seed(size = m)
     allocate(seed(m))

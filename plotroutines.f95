@@ -9,7 +9,6 @@ contains
     character(*), intent(in) :: title
     integer :: ret
     
-    print *, 'animating lattice'
     ! creates fifo pipe: plotfifo.dat
     call system("rm -f plotfifo.dat; mkfifo plotfifo.dat",ret)     
     
