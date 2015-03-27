@@ -87,10 +87,10 @@ contains
         N_SW = 0 ! init cluster size
         call growcluster(i,j,S,L,Bond,flsp,Mrkd,C,N_SW)
         
-        if (N_SW > 0) then
-          k = k+1
-          N_SW_rec(k) = N_SW ! record cluster size
-        endif
+        !if (N_SW > 0) then
+        !  k = k+1
+        !  N_SW_rec(k) = N_SW ! record cluster size
+        !endif
       enddo
     enddo
 
