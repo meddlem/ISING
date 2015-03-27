@@ -28,6 +28,7 @@ contains
     t = (/(i,i=0,n_meas-1)/)
     r = real((/(i,i=1,r_max)/),dp)
     p = 1 - exp(-2._dp*BJ)
+    N_SWC_tmp = 0
 
     call animate_lattice()
     
@@ -122,32 +123,57 @@ contains
     enddo
   end subroutine
 
-  recursive subroutine growcluster(i,j,S,L,Bond,flsp,Mrkd,N_SW)
+  subroutine growcluster(i,j,S,L,Bond,flsp,Mrkd,N_SW)
     ! try to form cluster around spin i,j
-    ! problem : you need to pass by reference here.. 
     integer, intent(inout)  :: S(:,:), N_SW
     logical, intent(inout)  :: Mrkd(:,:)
     integer, intent(in)     :: i, j, L
     logical, intent(in)     :: flsp, Bond(:,:,:) 
 
-    if (.not. Mrkd(i,j)) then
-      Mrkd(i,j) = .true. ! mark site as visited
-      N_SW = N_SW + 1 ! increase cluster size
-      if (flsp) S(i,j) = -S(i,j) ! flip spin
+    integer, allocatable :: C(:,:)
+    integer :: x(2), k, N_stack
+    
+    if (Mrkd(i,j)) return 
 
-      if (Bond(1,i,j)) then
-        call growcluster(modulo(i,L)+1,j,S,L,Bond,flsp,Mrkd,N_SW)
+    allocate(C(2,(4*L)**2))
+    N_SW = 0 
+    ! init stack
+    k = 1
+    C = 0
+    N_stack = 1
+    C(:,1) = [i,j]
+    
+    do while (k<=N_stack)
+      x = C(:,k) ! pick spin from stack
+
+      if (.not. Mrkd(x(1),x(2))) then
+        Mrkd(x(1),x(2)) = .true. ! mark site as visited
+        N_SW = N_SW + 1 ! increase cluster size
+        if (flsp) S(x(1),x(2)) = -S(x(1),x(2)) ! flip spin
+
+        if (Bond(1,x(1),x(2))) then
+          N_stack = N_stack+1
+          C(:,N_stack) = [modulo(x(1),L)+1,x(2)] ! add to stack
+        endif
+        
+        if (Bond(1,modulo(x(1)-2,L)+1,x(2))) then
+          N_stack = N_stack+1
+          C(:,N_stack) = [modulo(x(1)-2,L)+1,x(2)] 
+        endif
+        
+        if (Bond(2,x(1),x(2))) then 
+          N_stack = N_stack+1
+          C(:,N_stack) = [x(1),modulo(x(2),L)+1] 
+        endif
+
+        if (Bond(2,x(1),modulo(x(2)-2,L)+1)) then 
+          N_stack = N_stack+1
+          C(:,N_stack) = [x(1),modulo(x(2)-2,L)+1] 
+        endif
       endif
-      if (Bond(1,modulo(i-2,L)+1,j)) then
-        call growcluster(modulo(i-2,L)+1,j,S,L,Bond,flsp,Mrkd,N_SW)
-      endif
-      if (Bond(2,i,j)) then 
-        call growcluster(i,modulo(j,L)+1,S,L,Bond,flsp,Mrkd,N_SW)
-      endif
-      if (Bond(2,i,modulo(j-2,L)+1)) then 
-        call growcluster(i,modulo(j-2,L)+1,S,L,Bond,flsp,Mrkd,N_SW)
-      endif
-    endif
+      k = k+1
+    enddo
+  deallocate(C)
   end subroutine
   
   pure function nn_idx(x, L)
