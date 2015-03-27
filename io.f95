@@ -6,20 +6,28 @@ module io
   public :: user_in, results_out
 contains
 
-  subroutine user_in(BJ,L,N,r_max,n_corr)
+  subroutine user_in(BJ,L,method,r_max,n_corr)
     real(dp), intent(out) :: BJ
-    integer, intent(out)  :: L, N, r_max, n_corr
-    real(dp)              :: L_tmp
-  
+    integer, intent(out)  :: L, method, r_max, n_corr
+    
+    character(10) :: alg_set
+    ! check command line arguments
+    call getarg(1,alg_set)
+    if (trim(alg_set) == '-SW') then
+      method = 1
+    else
+      write(*,*) 'specify valid method: -SW, ..'
+      stop 
+    endif
+    
     write(*,'(/,A,/)') '************ Input *************' 
     write(*,'(A)',advance='no') "Beta*J = " 
     read(*,*) BJ
     write(*,'(A)',advance='no') "L = " 
-    read(*,*) L_tmp
+    read(*,*) L
     write(*,'(A)') "Running simulation..."
     
-    L = int(L_tmp)
-    N = L**2
+    ! set variables
     n_corr = L/3 ! number of spins used to calculate correlation
     r_max = L/4 ! distances over which to calc correlation function
   end subroutine

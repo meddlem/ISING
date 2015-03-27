@@ -7,11 +7,11 @@ module markov
   public :: run_sim
 
 contains
-  subroutine run_sim(S,L,r_max,n_corr,BE,BJ,h,t,r,Mag,runtime,c_ss,c_ss_fit,&
-      nu,chi,Cv)
+  subroutine run_sim(S,L,method,r_max,n_corr,BE,BJ,h,t,r,Mag,runtime,c_ss,&
+      c_ss_fit,nu,chi,Cv)
     integer, intent(inout)  :: S(:,:)
     real(dp), intent(inout) :: BE(:), BJ
-    integer, intent(in)     :: L, r_max, n_corr
+    integer, intent(in)     :: L, method, r_max, n_corr
     real(dp), intent(in)    :: h
     integer, intent(out)    :: t(:), runtime
     real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), Mag, nu, chi, Cv
@@ -32,7 +32,7 @@ contains
     
     call system_clock(start_time)
     do i=1,steps
-      call gen_config(S,L,m_tmp,N_SWC_tmp,p)
+      call gen_config(S,L,m_tmp,N_SWC_tmp,p,method)
 
       if ((mod(i,meas_step) == 0) .and. (i > meas_start)) then
         j = j+1
@@ -53,11 +53,10 @@ contains
     deallocate(g,N_SWC,m)
   end subroutine
 
-  subroutine gen_config(S,L,m,N_SW,p)
-    ! generates wolff cluster
+  subroutine gen_config(S,L,m,N_SW,p,method)
     integer, intent(inout) :: S(:,:)
     real(dp), intent(in)   :: p
-    integer, intent(in)    :: L
+    integer, intent(in)    :: L, method
     integer, intent(out)   :: m, N_SW ! fix dit nog 
 
     logical, allocatable :: Bond(:,:,:), Vis(:,:)
@@ -68,7 +67,6 @@ contains
     allocate(Bond(2,L,L),Vis(L,L))
     ! initialize variables 
     Bond = .false. ! init array that holds bonds in x,y dirs
-    flsp = .false. 
     Vis = .false.
     N_SW = 0
 
@@ -77,6 +75,7 @@ contains
     do i=1,L
       do j=1,L
         call random_number(r)
+        flsp = .false. 
         if (r<0.5_dp) flsp = .true.
         call backtrack(i,j,S,L,Bond,flsp,Vis,N_SW)
       enddo
