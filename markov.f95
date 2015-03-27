@@ -53,56 +53,87 @@ contains
     deallocate(g,N_SWC,m)
   end subroutine
 
-  subroutine gen_config(S,L,m,N_SWC,p)
+  subroutine gen_config(S,L,m,N_SW,p)
     ! generates wolff cluster
     integer, intent(inout) :: S(:,:)
     real(dp), intent(in)   :: p
     integer, intent(in)    :: L
-    integer, intent(out)   :: m, N_SWC 
+    integer, intent(out)   :: m, N_SW ! fix dit nog 
 
-    integer, allocatable :: C(:,:)
-    integer :: i, j, S_init, x(2), nn(4,2)
+    logical, allocatable :: Bond(:,:,:), Vis(:,:)
+    integer :: i, j
+    logical :: flsp 
+    real(dp) :: r
 
-    allocate(C(L**2,2))
+    allocate(Bond(2,L,L),Vis(L,L))
     ! initialize variables 
-    i = 1 ! labels spin in cluster
-    N_SWC = 1 ! number of spins in cluster
-    C = 0 ! init array that holds indices of all spins in cluster
-    call random_spin(x,L) ! start cluster by choosing 1 spin
+    Bond = .false. ! init array that holds bonds in x,y dirs
+    flsp = .false. 
+    Vis = .false.
+    N_SW = 0
 
-    S_init = S(x(1),x(2)) ! save state of chosen spin
-    C(1,:) = x ! add chosen spin to cluster     
-    S(x(1),x(2)) = -S_init ! flip initial spin
+    call freezebonds(S,Bond,L,p)
     
-    do while (i<=N_SWC)
-      x = C(i,:) ! pick a spin x in the cluster
-      nn = nn_idx(x,L) ! get nearest neighbors of spin x
-      
-      do j = 1,4 ! iterate over neighbors of x
-        call try_add(S,C,N_SWC,S_init,nn(j,:),p)
+    do i=1,L
+      do j=1,L
+        call random_number(r)
+        if (r<0.5_dp) flsp = .true.
+        call backtrack(i,j,S,L,Bond,flsp,Vis,N_SW)
       enddo
-      i = i+1 ! move to next spin in cluster
     enddo
 
     m = sum(S) ! calculate instantaneous magnetization
-    deallocate(C)
+    deallocate(Bond)
   end subroutine
 
-  subroutine try_add(S,C,N_SWC,S_init,s_idx,p)
-    integer, intent(inout) :: S(:,:), N_SWC, C(:,:)
-    integer, intent(in)    :: S_init, s_idx(:)
-    real(dp), intent(in)   :: p
+  subroutine freezebonds(S,Bond,L,p)
+    logical, intent(inout)  :: Bond(:,:,:)
+    integer, intent(in)     :: S(:,:), L 
+    real(dp), intent(in)    :: p
     
-    real(dp) :: r
+    integer   :: i, j
+    real(dp)  :: r
+    
+    do i=1,L
+      do j=1,L
+        if (S(i,j)==S(modulo(i,L)+1,j)) then
+          call random_number(r)
+          if (r<p) Bond(1,i,j) = .true.
+        endif
+        
+        if (S(i,j)==(S(i,modulo(j,L)+1))) then
+          call random_number(r)
+          if (r<p) Bond(2,i,j) = .true.
+        endif
+      enddo
+    enddo
+  end subroutine
 
-    if (S(s_idx(1),s_idx(2)) == S_init) then 
-      call random_number(r)
+  pure subroutine backtrack(i,j,S,L,Bond,flsp,Vis,N_SW)
+    integer, intent(inout)  :: S(:,:), N_SW
+    logical, intent(inout)  :: Vis(:,:)
+    integer, intent(in)     :: i, j, L
+    logical, intent(in)     :: flsp, Bond(:,:,:) 
 
-      if (r<p) then ! add spin to cluster with probability p
-        N_SWC = N_SWC+1
+    if (Vis(i,j) .eqv. .false.) then
+      Vis(i,j) = .true. ! mark site as visited
+      N_SW = N_SW + 1 ! increase cluster size
+      if (flsp .eqv. .true.) S(i,j) = -S(i,j) ! flip spin
 
-        C(N_SWC,:) = s_idx 
-        S(s_idx(1),s_idx(2)) = -S_init ! flip spin
+      if (Bond(1,i,j)) then
+        call backtrack(modulo(i,L)+1,j,S,L,Bond,flsp,Vis,N_SW)
+      endif
+      
+      if (Bond(1,modulo(i-2,L)+1,j)) then
+        call backtrack(modulo(i-2,L)+1,j,S,L,Bond,flsp,Vis,N_SW)
+      endif
+      
+      if (Bond(2,i,j)) then 
+        call backtrack(i,modulo(j,L)+1,S,L,Bond,flsp,Vis,N_SW)
+      endif
+      
+      if (Bond(2,i,modulo(j-2,L)+1)) then 
+        call backtrack(i,modulo(j-2,L)+1,S,L,Bond,flsp,Vis,N_SW)
       endif
     endif
   end subroutine
