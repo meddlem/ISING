@@ -124,7 +124,6 @@ contains
 
   recursive subroutine growcluster(i,j,S,L,Bond,flsp,Mrkd,N_SW)
     ! try to form cluster around spin i,j
-    ! problem : you need to pass by reference here.. 
     integer, intent(inout)  :: S(:,:), N_SW
     logical, intent(inout)  :: Mrkd(:,:)
     integer, intent(in)     :: i, j, L
