@@ -7,27 +7,29 @@ module markov
   public :: run_sim
 
 contains
-  subroutine run_sim(S,L,r_max,n_corr,BE,BJ,h,t,r,m,Mag,runtime,c_ss,c_ss_fit,&
+  subroutine run_sim(S,L,r_max,n_corr,BE,BJ,h,t,r,Mag,runtime,c_ss,c_ss_fit,&
       nu,chi,Cv)
     integer, intent(inout)  :: S(:,:)
     real(dp), intent(inout) :: BE(:), BJ
     integer, intent(in)     :: L, r_max, n_corr
     real(dp), intent(in)    :: h
-    integer, intent(out)    :: t(:), m(:), runtime
-    real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), nu, chi, Cv
+    integer, intent(out)    :: t(:), runtime
+    real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), Mag, nu, chi, Cv
 
-    integer, allocatable    :: N_SWC(:)
+    integer, allocatable    :: N_SWC(:), m(:)
     real(dp), allocatable   :: g(:,:)
     integer  :: i, j, start_time, m_tmp, N_SWC_tmp, end_time
-    real(dp) :: p, Mag
+    real(dp) :: p
     
-    allocate(g(n_meas,r_max),N_SWC(n_meas))
+    allocate(g(n_meas,r_max),N_SWC(n_meas),m(n_meas))
     ! initialize needed variables
     j = 0
     t = (/(i,i=0,n_meas-1)/)
     r = real((/(i,i=1,r_max)/),dp)
     p = 1 - exp(-2._dp*BJ)
 
+    call animate_lattice()
+    
     call system_clock(start_time)
     do i=1,steps
       call gen_config(S,L,m_tmp,N_SWC_tmp,p)
@@ -44,10 +46,11 @@ contains
       if (mod(i,plot_interval) == 0) call write_lattice(S,L) ! pipe
     enddo    
     call system_clock(end_time)
-    call sim_run_output(L,N_SWC,m,start_time,end_time,g,r,BE,&
+    
+    call close_lattice_plot()
+    call sim_proc_output(L,N_SWC,m,start_time,end_time,g,r,BE,&
       c_ss_fit,c_ss,nu,Mag,Cv,runtime,Chi)
-
-    deallocate(g,N_SWC)
+    deallocate(g,N_SWC,m)
   end subroutine
 
   subroutine gen_config(S,L,m,N_SWC,p)

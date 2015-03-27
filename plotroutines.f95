@@ -5,8 +5,7 @@ module plotroutines
   public :: line_plot, write_lattice, close_lattice_plot, animate_lattice
 
 contains
-  subroutine animate_lattice(title)
-    character(*), intent(in) :: title
+  subroutine animate_lattice()
     integer :: ret
     
     ! creates fifo pipe: plotfifo.dat
@@ -26,7 +25,6 @@ contains
       write(10,*) 'set border 0'
       write(10,*) 'unset tics'
       write(10,*) 'set cbtics ("+" 1, "-" -1)'
-      write(10,*) 'set title "'//TRIM(title)//'"'
       write(10,*) 'set pm3d map'
       write(10,*) 'load "loop.plt"'
     close(10)
