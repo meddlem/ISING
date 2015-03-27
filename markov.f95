@@ -8,18 +8,18 @@ module markov
 
 contains
   subroutine run_sim(S,L,r_max,n_corr,BE,BJ,h,t,r,m,runtime,c_ss,c_ss_fit,&
-      alpha,chi,Cv)
+      nu,chi,Cv)
     integer, intent(inout)  :: S(:,:)
     real(dp), intent(inout) :: BE(:), BJ
     integer, intent(in)     :: L, r_max, n_corr
     real(dp), intent(in)    :: h
     integer, intent(out)    :: t(:), m(:), runtime
-    real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), alpha, chi, Cv
+    real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), nu, chi, Cv
 
     integer, allocatable    :: N_SWC(:)
     real(dp), allocatable   :: g(:,:)
     integer  :: i, j, start_time, m_tmp, N_SWC_tmp, end_time
-    real(dp) :: p, Mag, N_SWC_avg, offset, err_alpha
+    real(dp) :: p, Mag, N_SWC_avg, offset, err_nu
     
     allocate(g(n_meas,r_max),N_SWC(n_meas))
     ! initialize needed variables
@@ -30,7 +30,7 @@ contains
 
     call system_clock(start_time)
     do i=1,steps
-      call gen_config(S,L,m_tmp, N_SWC_tmp, p)
+      call gen_config(S,L,m_tmp,N_SWC_tmp,p)
 
       if ((mod(i,meas_step) == 0) .and. (i > meas_start)) then
         j = j+1
@@ -54,6 +54,7 @@ contains
     ! calculate susceptibility
     chi = N_SWC_avg/L**2 - Mag**2
     !chi_alt = 1._dp/L**2*sum(real(m,dp)**2)/(n_meas*L**2)
+    !chi = sum(N_SWC**2/N)/n_meas ! klopt alleen voor T>T_c 
 
     ! calculate specific heat, per particle
     Cv = sum(BE**2)/n_meas - sum(BE/n_meas)**2
@@ -61,13 +62,13 @@ contains
 
     ! calculate correlation function 
     c_ss = sum(g,1)/n_meas 
-    call lin_fit(alpha,err_alpha,offset,-log(c_ss),log(r))
-    c_ss_fit = exp(-offset)*r**(-alpha)
+    call lin_fit(nu,err_nu,offset,-log(c_ss),log(r))
+    c_ss_fit = exp(-offset)*r**(-nu)
 
     deallocate(g,N_SWC)
   end subroutine
 
-  subroutine gen_config(S,L,m, N_SWC, p)
+  subroutine gen_config(S,L,m,N_SWC,p)
     integer, intent(inout) :: S(:,:)
     integer, intent(out) :: m, N_SWC 
     real(dp), intent(in) :: p
@@ -76,8 +77,6 @@ contains
     integer, allocatable :: C(:,:)
     integer :: i, j, S_init, x(2), nn(4,2)
 
-   ! print *, 'running gen_config'
-    
     allocate(C(L**2,2))
     ! initialize variables 
     i = 1 ! labels spin in cluster

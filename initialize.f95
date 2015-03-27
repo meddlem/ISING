@@ -22,7 +22,7 @@ contains
     integer, intent(in)   :: L
     ! assign initial spins at random, corresponds to T=∞ 
 
-    allocate(u(1:L, 1:L))
+    allocate(u(L,L))
     call random_number(u)
     
     S = -1
