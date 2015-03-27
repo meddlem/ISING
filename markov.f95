@@ -1,6 +1,6 @@
 module markov 
   use constants
-  use main_routines
+  use process_data 
   use plotroutines
   implicit none
   private

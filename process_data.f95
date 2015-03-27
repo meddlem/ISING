@@ -1,11 +1,11 @@
-module main_routines
+module process_data 
   use constants
   implicit none
   private 
   public :: sim_proc_output
 
 contains
-  subroutine sim_proc_output(L,N_SWC,m,start_time,end_time,g,r,BE,&
+  pure subroutine sim_proc_output(L,N_SWC,m,start_time,end_time,g,r,BE,&
       c_ss_fit,c_ss,nu,Mag,Cv,runtime,Chi)
     ! calculates various physical quantities from simulation
     integer, intent(in)   :: L, m(:), start_time, end_time, N_SWC(:)
