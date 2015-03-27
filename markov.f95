@@ -66,10 +66,10 @@ contains
     logical :: flsp 
     real(dp) :: r
 
-    allocate(Bond(2,L,L),Mrkd(L,L),N_SW_rec(L**2))
+    allocate(Bond(2,L,L),Mrkd(L,L),N_SW_rec(int(L,lng)**2))
     ! initialize variables 
     Bond = .false. ! init array that holds bonds in x,y dirs
-    Mrkd = .false. ! init marked by backtrack
+    Mrkd = .false. ! init marked by growcluster
     N_SW_rec = 0
     k = 0
 
@@ -84,7 +84,7 @@ contains
         if (r<0.5_dp) flsp = .true.
         
         N_SW = 0 ! init cluster size
-        call backtrack(i,j,S,L,Bond,flsp,Mrkd,N_SW)
+        call growcluster(i,j,S,L,Bond,flsp,Mrkd,N_SW)
         
         if (N_SW > 0) then
           k = k+1
@@ -122,8 +122,9 @@ contains
     enddo
   end subroutine
 
-  pure subroutine backtrack(i,j,S,L,Bond,flsp,Mrkd,N_SW)
+  recursive subroutine growcluster(i,j,S,L,Bond,flsp,Mrkd,N_SW)
     ! try to form cluster around spin i,j
+    ! problem : you need to pass by reference here.. 
     integer, intent(inout)  :: S(:,:), N_SW
     logical, intent(inout)  :: Mrkd(:,:)
     integer, intent(in)     :: i, j, L
@@ -135,19 +136,16 @@ contains
       if (flsp) S(i,j) = -S(i,j) ! flip spin
 
       if (Bond(1,i,j)) then
-        call backtrack(modulo(i,L)+1,j,S,L,Bond,flsp,Mrkd,N_SW)
+        call growcluster(modulo(i,L)+1,j,S,L,Bond,flsp,Mrkd,N_SW)
       endif
-      
       if (Bond(1,modulo(i-2,L)+1,j)) then
-        call backtrack(modulo(i-2,L)+1,j,S,L,Bond,flsp,Mrkd,N_SW)
+        call growcluster(modulo(i-2,L)+1,j,S,L,Bond,flsp,Mrkd,N_SW)
       endif
-      
       if (Bond(2,i,j)) then 
-        call backtrack(i,modulo(j,L)+1,S,L,Bond,flsp,Mrkd,N_SW)
+        call growcluster(i,modulo(j,L)+1,S,L,Bond,flsp,Mrkd,N_SW)
       endif
-      
       if (Bond(2,i,modulo(j-2,L)+1)) then 
-        call backtrack(i,modulo(j-2,L)+1,S,L,Bond,flsp,Mrkd,N_SW)
+        call growcluster(i,modulo(j-2,L)+1,S,L,Bond,flsp,Mrkd,N_SW)
       endif
     endif
   end subroutine
@@ -183,8 +181,6 @@ contains
     
     integer :: i, j, k, nn(4,2)
 
-    if (size(S,1) < 2) return !check
-    
     BE = 0._dp ! initialze energy 
 
     do i = 1,L

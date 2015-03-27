@@ -12,13 +12,13 @@ program main
   ! S: array containing Spins indexed as row, column
 
   real(dp), allocatable :: BE(:), c_ss(:), r(:), c_ss_fit(:)
-  real(dp)              :: BJ, nu, chi, Mag, Cv, h = 0._dp
+  real(dp)              :: BJ, nu, chi, Mag, Cv, h
   integer, allocatable  :: S(:,:), t(:)
   integer               :: runtime, L, method, r_max, n_corr
   logical               :: calc_css
   
   call get_usr_args(method,calc_css) 
-  call user_in(BJ,L,r_max,n_corr)
+  call user_in(method,BJ,L,h,r_max,n_corr)
   allocate(S(L,L),t(n_meas),BE(n_meas),c_ss(r_max),c_ss_fit(r_max),r(r_max))
 
   call init_random_seed()

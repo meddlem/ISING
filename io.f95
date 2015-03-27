@@ -32,8 +32,9 @@ contains
     enddo
   end subroutine
 
-  subroutine user_in(BJ,L,r_max,n_corr)
-    real(dp), intent(out) :: BJ
+  subroutine user_in(method,BJ,L,h,r_max,n_corr)
+    integer, intent(in)   :: method
+    real(dp), intent(out) :: BJ, h
     integer, intent(out)  :: L, r_max, n_corr
     
     
@@ -42,6 +43,10 @@ contains
     read(*,*) BJ
     write(*,'(A)',advance='no') "L = " 
     read(*,*) L
+    if (method == 3) then
+      write(*,'(A)',advance='no') "h = " 
+      read(*,*) h
+    endif
     write(*,'(A)') "Running simulation..."
     
     ! set variables
