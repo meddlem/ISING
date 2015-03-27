@@ -24,9 +24,9 @@ contains
 
   end subroutine
 
-  subroutine results_out(BJ,BE,h,runtime,nu, chi, Cv) 
-    real(dp), intent(in) :: BJ, BE, h, nu, chi, Cv
-    integer, intent(in) :: runtime
+  subroutine results_out(BJ,h,runtime,nu,chi,Mag,Cv) 
+    real(dp), intent(in) :: BJ, h, nu, chi, Mag, Cv
+    integer, intent(in)  :: runtime
 
     open(12,access = 'sequential',file = 'output.txt')
       write(12,'(/,A,/)') '*********** Summary ***********' 
@@ -35,9 +35,9 @@ contains
     
       write(12,'(/,A,/)') '*********** Output ************' 
       write(12,'(A,I6,A)') "Runtime : ", runtime, " s"
-      write(12,*) "Final Energy", BE
       write(12,*) "nu: ", nu
       write(12,*) "specific heat", Cv
+      write(12,*) "Magnetization", Mag
       write(12,*) "(unsubtracted) susceptibility", chi
       write(12,'(/,A,/)') '*******************************' 
     close(12)
