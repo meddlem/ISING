@@ -62,12 +62,12 @@ contains
     integer, intent(out)   :: m, N_SW ! fix dit nog 
 
     logical, allocatable :: Bond(:,:,:), Mrkd(:,:)
-    integer, allocatable :: N_SW_rec(:)
+    integer, allocatable :: N_SW_rec(:), C(:,:)
     integer :: i, j, k, N_clusters
     logical :: flsp 
     real(dp) :: r
 
-    allocate(Bond(2,L,L),Mrkd(L,L),N_SW_rec(int(L,lng)**2))
+    allocate(Bond(2,L,L),C(2,(4*L)**2),Mrkd(L,L),N_SW_rec(int(L,lng)**2))
     ! initialize variables 
     Bond = .false. ! init array that holds bonds in x,y dirs
     Mrkd = .false. ! init marked by growcluster
@@ -85,7 +85,7 @@ contains
         if (r<0.5_dp) flsp = .true.
         
         N_SW = 0 ! init cluster size
-        call growcluster(i,j,S,L,Bond,flsp,Mrkd,N_SW)
+        call growcluster(i,j,S,L,Bond,flsp,Mrkd,C,N_SW)
         
         if (N_SW > 0) then
           k = k+1
@@ -95,6 +95,7 @@ contains
     enddo
 
     N_clusters = k ! record number of clusters 
+    ! remember to return N_SW_rec average or something
     m = sum(S) ! calculate instantaneous magnetization
     deallocate(Bond,Mrkd,N_SW_rec)
   end subroutine
@@ -123,23 +124,19 @@ contains
     enddo
   end subroutine
 
-  subroutine growcluster(i,j,S,L,Bond,flsp,Mrkd,N_SW)
+  pure subroutine growcluster(i,j,S,L,Bond,flsp,Mrkd,C,N_SW)
     ! try to form cluster around spin i,j
-    integer, intent(inout)  :: S(:,:), N_SW
+    integer, intent(inout)  :: S(:,:), N_SW, C(:,:)
     logical, intent(inout)  :: Mrkd(:,:)
     integer, intent(in)     :: i, j, L
     logical, intent(in)     :: flsp, Bond(:,:,:) 
 
-    integer, allocatable :: C(:,:)
     integer :: x(2), k, N_stack
     
     if (Mrkd(i,j)) return 
 
-    allocate(C(2,(4*L)**2))
-    N_SW = 0 
     ! init stack
     k = 1
-    C = 0
     N_stack = 1
     C(:,1) = [i,j]
     
@@ -173,7 +170,6 @@ contains
       endif
       k = k+1
     enddo
-  deallocate(C)
   end subroutine
   
   pure function nn_idx(x, L)
