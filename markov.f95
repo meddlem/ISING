@@ -7,11 +7,12 @@ module markov
   public :: run_sim
 
 contains
-  subroutine run_sim(S,L,method,r_max,n_corr,BE,BJ,h,t,r,Mag,runtime,c_ss,&
-      c_ss_fit,nu,chi,Cv)
+  subroutine run_sim(S,L,method,r_max,n_corr,BE,BJ,h,t,r,Mag,runtime, &
+      calc_css,c_ss,c_ss_fit,nu,chi,Cv)
     integer, intent(inout)  :: S(:,:)
     real(dp), intent(inout) :: BE(:), BJ
     integer, intent(in)     :: L, method, r_max, n_corr
+    logical, intent(in)     :: calc_css
     real(dp), intent(in)    :: h
     integer, intent(out)    :: t(:), runtime
     real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), Mag, nu, chi, Cv
@@ -39,7 +40,7 @@ contains
         m(j) = m_tmp ! record magnetization
         N_SWC(j) = N_SWC_tmp ! record clustersize
 
-        call s_corr(g(j,:),S,L,r_max,n_corr)
+        if (calc_css) call s_corr(g(j,:),S,L,r_max,n_corr)
         call calc_energy(BE(j),S,L,BJ,h)
       endif
 
@@ -49,7 +50,7 @@ contains
     
     call close_lattice_plot()
     call sim_proc_output(L,N_SWC,m,start_time,end_time,g,r,BE,&
-      c_ss_fit,c_ss,nu,Mag,Cv,runtime,Chi)
+      calc_css,c_ss_fit,c_ss,nu,Mag,Cv,runtime,Chi)
     deallocate(g,N_SWC,m)
   end subroutine
 
@@ -59,33 +60,46 @@ contains
     integer, intent(in)    :: L, method
     integer, intent(out)   :: m, N_SW ! fix dit nog 
 
-    logical, allocatable :: Bond(:,:,:), Vis(:,:)
-    integer :: i, j
+    logical, allocatable :: Bond(:,:,:), Mrkd(:,:)
+    integer, allocatable :: N_SW_rec(:)
+    integer :: i, j, k, N_clusters
     logical :: flsp 
     real(dp) :: r
 
-    allocate(Bond(2,L,L),Vis(L,L))
+    allocate(Bond(2,L,L),Mrkd(L,L),N_SW_rec(L**2))
     ! initialize variables 
     Bond = .false. ! init array that holds bonds in x,y dirs
-    Vis = .false.
-    N_SW = 0
+    Mrkd = .false. ! init marked by backtrack
+    N_SW_rec = 0
+    k = 0
 
+    ! scan lattice and form bonds
     call freezebonds(S,Bond,L,p)
     
+    ! build clusters recursively
     do i=1,L
       do j=1,L
         call random_number(r)
         flsp = .false. 
         if (r<0.5_dp) flsp = .true.
-        call backtrack(i,j,S,L,Bond,flsp,Vis,N_SW)
+        
+        N_SW = 0 ! init cluster size
+        call backtrack(i,j,S,L,Bond,flsp,Mrkd,N_SW)
+        
+        if (N_SW > 0) then
+          k = k+1
+          N_SW_rec(k) = N_SW ! record cluster size
+        endif
       enddo
     enddo
 
+    N_clusters = k ! record number of clusters 
     m = sum(S) ! calculate instantaneous magnetization
-    deallocate(Bond)
+    deallocate(Bond,Mrkd,N_SW_rec)
   end subroutine
 
   subroutine freezebonds(S,Bond,L,p)
+    ! create bonds between neighboring spins
     logical, intent(inout)  :: Bond(:,:,:)
     integer, intent(in)     :: S(:,:), L 
     real(dp), intent(in)    :: p
@@ -108,31 +122,32 @@ contains
     enddo
   end subroutine
 
-  pure subroutine backtrack(i,j,S,L,Bond,flsp,Vis,N_SW)
+  pure subroutine backtrack(i,j,S,L,Bond,flsp,Mrkd,N_SW)
+    ! try to form cluster around spin i,j
     integer, intent(inout)  :: S(:,:), N_SW
-    logical, intent(inout)  :: Vis(:,:)
+    logical, intent(inout)  :: Mrkd(:,:)
     integer, intent(in)     :: i, j, L
     logical, intent(in)     :: flsp, Bond(:,:,:) 
 
-    if (Vis(i,j) .eqv. .false.) then
-      Vis(i,j) = .true. ! mark site as visited
+    if (.not. Mrkd(i,j)) then
+      Mrkd(i,j) = .true. ! mark site as visited
       N_SW = N_SW + 1 ! increase cluster size
-      if (flsp .eqv. .true.) S(i,j) = -S(i,j) ! flip spin
+      if (flsp) S(i,j) = -S(i,j) ! flip spin
 
       if (Bond(1,i,j)) then
-        call backtrack(modulo(i,L)+1,j,S,L,Bond,flsp,Vis,N_SW)
+        call backtrack(modulo(i,L)+1,j,S,L,Bond,flsp,Mrkd,N_SW)
       endif
       
       if (Bond(1,modulo(i-2,L)+1,j)) then
-        call backtrack(modulo(i-2,L)+1,j,S,L,Bond,flsp,Vis,N_SW)
+        call backtrack(modulo(i-2,L)+1,j,S,L,Bond,flsp,Mrkd,N_SW)
       endif
       
       if (Bond(2,i,j)) then 
-        call backtrack(i,modulo(j,L)+1,S,L,Bond,flsp,Vis,N_SW)
+        call backtrack(i,modulo(j,L)+1,S,L,Bond,flsp,Mrkd,N_SW)
       endif
       
       if (Bond(2,i,modulo(j-2,L)+1)) then 
-        call backtrack(i,modulo(j-2,L)+1,S,L,Bond,flsp,Vis,N_SW)
+        call backtrack(i,modulo(j-2,L)+1,S,L,Bond,flsp,Mrkd,N_SW)
       endif
     endif
   end subroutine

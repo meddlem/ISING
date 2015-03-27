@@ -6,12 +6,13 @@ module process_data
 
 contains
   pure subroutine sim_proc_output(L,N_SWC,m,start_time,end_time,g,r,BE,&
-      c_ss_fit,c_ss,nu,Mag,Cv,runtime,Chi)
+      calc_css,c_ss_fit,c_ss,nu,Mag,Cv,runtime,Chi)
     ! calculates various physical quantities from simulation
     integer, intent(in)   :: L, m(:), start_time, end_time, N_SWC(:)
     real(dp), intent(in)  :: g(:,:), BE(:), r(:)
     integer, intent(out)  :: runtime
     real(dp), intent(out) :: c_ss_fit(:), c_ss(:), Mag, Cv, nu, Chi
+    logical, intent(in)   :: calc_css
 
     real(dp)  :: N_SWC_mean, err_nu, offset
     integer   :: N
@@ -35,9 +36,15 @@ contains
     Cv = Cv/N
 
     ! calculate correlation function 
-    c_ss = sum(g,1)/n_meas 
-    call lin_fit(nu,err_nu,offset,-log(c_ss),log(r))
-    c_ss_fit = exp(-offset)*r**(-nu)
+    if (calc_css) then
+      c_ss = sum(g,1)/n_meas 
+      call lin_fit(nu,err_nu,offset,-log(c_ss),log(r))
+      c_ss_fit = exp(-offset)*r**(-nu)
+    else
+      c_ss = 0._dp 
+      c_ss_fit =  0._dp
+      nu = 0._dp
+    endif
     
     ! calculate runtime
     runtime = (end_time - start_time)/1000

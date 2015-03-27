@@ -3,22 +3,39 @@ module io
   use plotroutines
   implicit none
   private
-  public :: user_in, results_out
+  public :: get_usr_args, user_in, results_out
 contains
 
-  subroutine user_in(BJ,L,method,r_max,n_corr)
-    real(dp), intent(out) :: BJ
-    integer, intent(out)  :: L, method, r_max, n_corr
+  subroutine get_usr_args(method,calc_css)
+    integer, intent(out) :: method
+    logical, intent(out) :: calc_css 
     
-    character(10) :: alg_set
+    character(10) :: arg
+    integer       :: i
+
+    ! defaults
+    method = 1
+    calc_css = .false.
+
     ! check command line arguments
-    call getarg(1,alg_set)
-    if (trim(alg_set) == '-SW') then
-      method = 1
-    else
-      write(*,*) 'specify valid method: -SW, ..'
-      stop 
-    endif
+    do i=1,iargc()
+      call getarg(i,arg)
+      if (trim(arg) == '-S') then
+        method = 1
+      elseif (trim(arg) == '-W') then
+        method = 2
+      elseif (trim(arg) == '-M') then
+        method = 3
+      elseif (trim(arg) == '-c') then
+        calc_css = .true.
+      endif
+    enddo
+  end subroutine
+
+  subroutine user_in(BJ,L,r_max,n_corr)
+    real(dp), intent(out) :: BJ
+    integer, intent(out)  :: L, r_max, n_corr
+    
     
     write(*,'(/,A,/)') '************ Input *************' 
     write(*,'(A)',advance='no') "Beta*J = " 
@@ -32,9 +49,11 @@ contains
     r_max = L/4 ! distances over which to calc correlation function
   end subroutine
 
-  subroutine results_out(BE,BJ,t,r,h,runtime,c_ss,c_ss_fit,nu,chi,Mag,Cv) 
+  subroutine results_out(BE,BJ,t,r,h,runtime,calc_css,c_ss,c_ss_fit,nu, &
+      chi,Mag,Cv) 
     real(dp), intent(in) :: BE(:), BJ, r(:), h, c_ss(:), c_ss_fit(:), &
       nu, chi, Mag, Cv
+    logical, intent(in)  :: calc_css
     integer, intent(in)  :: t(:), runtime
 
     open(12,access = 'sequential',file = 'output.txt')
@@ -44,16 +63,19 @@ contains
     
       write(12,'(/,A,/)') '*********** Output ************' 
       write(12,'(A,I6,A)') "Runtime : ", runtime, " s"
-      write(12,*) "nu: ", nu
       write(12,*) "specific heat", Cv
       write(12,*) "Magnetization", Mag
       write(12,*) "(unsubtracted) susceptibility", chi
+      if (calc_css) write(12,*) "nu: ", nu
       write(12,'(/,A,/)') '*******************************' 
     close(12)
     
     ! plot results
     call line_plot(real(t,dp),BE,'t','energy','','',1)
-    call line_plot(r,c_ss,'r','corr','corr','',3,c_ss_fit,'fit')
+    
+    if (calc_css) then
+      call line_plot(r,c_ss,'r','corr','corr','',3,c_ss_fit,'fit')
+    endif
     
     call system('cat output.txt')
   end subroutine
