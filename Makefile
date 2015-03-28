@@ -14,6 +14,8 @@ OBJS += plotroutines.o
 OBJS += process_data.o
 OBJS += io.o
 OBJS += initialize.o
+OBJS += Wolff.o
+OBJS += Swendsen_Wang.o
 OBJS += markov.o
 OBJS += main.o
 

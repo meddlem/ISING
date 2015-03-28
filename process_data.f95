@@ -2,10 +2,10 @@ module process_data
   use constants
   implicit none
   private 
-  public :: sim_proc_output
+  public :: proc_sim_output
 
 contains
-  pure subroutine sim_proc_output(L,N_SW,m,start_time,end_time,g,r,BE,&
+  pure subroutine proc_sim_output(L,N_SW,m,start_time,end_time,g,r,BE,&
       calc_css,c_ss_fit,c_ss,nu,Mag,Cv,runtime,Chi)
     ! calculates various physical quantities from simulation
     integer, intent(in) :: L
