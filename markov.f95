@@ -30,6 +30,7 @@ contains
     r = real((/(i,i=1,r_max)/),dp)
     p = 1 - exp(-2._dp*BJ)
     N_SW_tmp = 0
+    m_tmp = 0
 
     call animate_lattice()
     
@@ -61,7 +62,20 @@ contains
     real(dp), intent(in)      :: p
     integer, intent(in)       :: L, method
     integer(lng), intent(out) :: m, N_SW ! fix dit nog 
+    
+    if (method == 1) then
+      call SwWa(S,L,m,N_SW,p)
+    elseif (method == 2) then
+      call Wolff(S,L,m,N_SW,p)
+    endif
+  end subroutine
 
+  subroutine SwWa(S,L,m,N_SW,p)
+    integer, intent(inout)    :: S(:,:)
+    real(dp), intent(in)      :: p
+    integer, intent(in)       :: L
+    integer(lng), intent(out) :: m, N_SW ! fix dit nog 
+    
     logical, allocatable :: Bond(:,:,:), Mrkd(:,:)
     integer, allocatable :: N_SW_rec(:), C(:,:)
     integer(lng)  :: k, N
@@ -189,6 +203,60 @@ contains
       C(:,N_stack) = [i,modulo(j-2,L)+1] 
     endif
   end subroutine
+
+  subroutine Wolff(S,L,m,N_SWC,p)
+    ! generates wolff cluster
+    integer, intent(inout) :: S(:,:)
+    real(dp), intent(in)   :: p
+    integer, intent(in)    :: L
+    integer, intent(out)   :: m, N_SWC 
+
+    integer, allocatable :: C(:,:)
+    integer :: i, j, S_init, x(2), nn(4,2)
+
+    allocate(C(L**2,2))
+    ! initialize variables 
+    i = 1 ! labels spin in cluster
+    N_SWC = 1 ! number of spins in cluster
+    C = 0 ! init array that holds indices of all spins in cluster
+    call random_spin(x,L) ! start cluster by choosing 1 spin
+
+    S_init = S(x(1),x(2)) ! save state of chosen spin
+    C(1,:) = x ! add chosen spin to cluster     
+    S(x(1),x(2)) = -S_init ! flip initial spin
+    
+    do while (i<=N_SWC)
+      x = C(i,:) ! pick a spin x in the cluster
+      nn = nn_idx(x,L) ! get nearest neighbors of spin x
+      
+      do j = 1,4 ! iterate over neighbors of x
+        call try_add(S,C,N_SWC,S_init,nn(j,:),p)
+      enddo
+      i = i+1 ! move to next spin in cluster
+    enddo
+
+    m = sum(S) ! calculate instantaneous magnetization
+    deallocate(C)
+  end subroutine
+
+  subroutine try_add(S,C,N_SWC,S_init,s_idx,p)
+    integer, intent(inout) :: S(:,:), N_SWC, C(:,:)
+    integer, intent(in)    :: S_init, s_idx(:)
+    real(dp), intent(in)   :: p
+    
+    real(dp) :: r
+
+    if (S(s_idx(1),s_idx(2)) == S_init) then 
+      call random_number(r)
+
+      if (r<p) then ! add spin to cluster with probability p
+        N_SWC = N_SWC+1
+
+        C(N_SWC,:) = s_idx 
+        S(s_idx(1),s_idx(2)) = -S_init ! flip spin
+      endif
+    endif
+  end subroutine 
   
   pure function nn_idx(x, L)
     ! returns indices of nearest neighbors of x_ij, accounting for PBC

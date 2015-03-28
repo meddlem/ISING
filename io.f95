@@ -14,18 +14,16 @@ contains
     integer       :: i
 
     ! defaults
-    method = 1
+    method = 2 ! use wolff by default
     calc_css = .false.
 
     ! check command line arguments
     do i=1,iargc()
       call getarg(i,arg)
-      if (trim(arg) == '-S') then
+      if ((trim(arg) == '--SW') .or. (trim(arg) == '-S')) then
         method = 1
-      elseif (trim(arg) == '-W') then
+      elseif ((trim(arg) == '--Wolff') .or. (trim(arg) == '-W')) then
         method = 2
-      elseif (trim(arg) == '-M') then
-        method = 3
       elseif (trim(arg) == '-c') then
         calc_css = .true.
       endif
