@@ -9,13 +9,14 @@ contains
     integer, intent(inout)    :: S(:,:)
     real(dp), intent(in)      :: p
     integer, intent(in)       :: L
-    integer(lng), intent(out) :: m, N_SW ! fix dit nog 
+    integer(lng), intent(out) :: m, N_SW 
     
     logical, allocatable :: Bond(:,:,:), Mrkd(:,:)
     integer, allocatable :: N_SW_rec(:), C(:,:)
     integer(lng)  :: k, N
     integer       :: i, j 
     
+    ! allocate needed arrays
     N = int(L,lng)**2
     allocate(Bond(2,L,L),C(2,8*N),Mrkd(L,L),N_SW_rec(N))
 
@@ -57,14 +58,15 @@ contains
     
     do i=1,L
       do j=1,L
-        if (S(i,j)==S(modulo(i,L)+1,j)) then
+        ! make x,y bonds with probability p when spins are equal
+        if (S(i,j) == S(modulo(i,L)+1 ,j)) then
           call random_number(r)
-          if (r<p) Bond(1,i,j) = .true.
+          if (r < p) Bond(1,i,j) = .true.
         endif
         
-        if (S(i,j)==(S(i,modulo(j,L)+1))) then
+        if (S(i,j) == (S(i, modulo(j,L)+1))) then
           call random_number(r)
-          if (r<p) Bond(2,i,j) = .true.
+          if (r < p) Bond(2,i,j) = .true.
         endif
       enddo
     enddo
@@ -82,14 +84,14 @@ contains
     logical   :: flsp
     
     if (Mrkd(i_init,j_init)) then
-      return
+      return 
     else
       ! decide if cluster spin will be flipped
       call random_number(r)
       flsp = .false. 
       if (r<0.5_dp) flsp = .true.
 
-      ! init stack holding sites to be scanned
+      ! initialize stack holding sites to be scanned
       k = 1
       N_stack = 1
       C(:,1) = [i_init,j_init]
@@ -105,37 +107,39 @@ contains
           if (flsp) S(i,j) = -S(i,j) ! flip spin
           
           ! scan bonds with neighbors 
-          call grow_stack(i,j,L,Bond,C,N_stack)
+          call add_stack(i,j,L,Bond,C,N_stack)
         endif
-        k = k+1
+        ! move to next spin in stack
+        k = k+1 
       enddo
     endif
   end subroutine
 
-  pure subroutine grow_stack(i,j,L,Bond,C,N_stack)
+  pure subroutine add_stack(i,j,L,Bond,C,N_stack)
     ! checks bonds with neighbors, adds to stack if bonded
     integer, intent(inout)  :: C(:,:), N_stack
     logical, intent(in)     :: Bond(:,:,:)
     integer, intent(in)     :: i, j, L
     
+    ! if a bond exists add it to the stack
     if (Bond(1,i,j)) then
       N_stack = N_stack+1
-      C(:,N_stack) = [modulo(i,L)+1,j] ! add to stack
+      C(:,N_stack) = [modulo(i,L)+1, j] 
     endif
     
-    if (Bond(1,modulo(i-2,L)+1,j)) then
+    if (Bond(1, modulo(i-2,L)+1, j)) then
       N_stack = N_stack+1
-      C(:,N_stack) = [modulo(i-2,L)+1,j] 
+      C(:,N_stack) = [modulo(i-2,L)+1, j] 
     endif
     
     if (Bond(2,i,j)) then 
       N_stack = N_stack+1
-      C(:,N_stack) = [i,modulo(j,L)+1] 
+      C(:,N_stack) = [i, modulo(j,L)+1] 
     endif
 
-    if (Bond(2,i,modulo(j-2,L)+1)) then 
+    if (Bond(2, i, modulo(j-2,L)+1)) then 
       N_stack = N_stack+1
-      C(:,N_stack) = [i,modulo(j-2,L)+1] 
+      C(:,N_stack) = [i, modulo(j-2,L)+1] 
     endif
   end subroutine
 end module

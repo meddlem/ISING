@@ -40,7 +40,7 @@ contains
     do i=1,steps
       call gen_config(S,L,m_tmp,N_SW_tmp,p,method)
 
-      if (i > meas_start) then
+      if (i >= meas_start) then
         j = j+1
         m(j) = m_tmp ! record magnetization
         N_SW(j) = N_SW_tmp ! record clustersize
@@ -95,6 +95,7 @@ contains
   end subroutine
 
   pure subroutine s_corr(g,S,L,r_max,n_corr)
+    ! calculate spin-spin correlation function
     integer, intent(in)   :: S(:,:), L, r_max, n_corr
     real(dp), intent(out) :: g(:)
     
@@ -103,8 +104,9 @@ contains
                           
     r_0 = (L-n_corr)/2
     r_1 = r_0 + 1
+
     do i=1,n_corr
-      g_tmp(i,:) = S(i+r_0,i+r_0)*S(i+r_0,i+r_1:i+r_0+r_max) 
+      g_tmp(i,:) = S(i+r_0, i+r_0)*S(i+r_0, i+r_1 : i+r_0+r_max) 
     enddo
 
     g = sum(g_tmp,1)/n_corr 
