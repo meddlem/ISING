@@ -11,7 +11,7 @@ module constants
 
   integer, parameter :: meas_step = 1 ! interval between measurements
   integer, parameter :: steps = 20000 ! number of iterations
-  integer, parameter :: meas_start = 5000 ! start measurement after .. steps 
+  integer, parameter :: meas_start = 10000 ! start measurement after .. steps 
   integer, parameter :: n_meas = steps/meas_step - meas_start 
   integer, parameter :: plot_interval = 59 ! plot every .. steps
 end module
