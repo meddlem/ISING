@@ -5,31 +5,32 @@ module process_data
   public :: sim_proc_output
 
 contains
-  pure subroutine sim_proc_output(L,N_SWC,m,start_time,end_time,g,r,BE,&
+  pure subroutine sim_proc_output(L,N_SW,m,start_time,end_time,g,r,BE,&
       calc_css,c_ss_fit,c_ss,nu,Mag,Cv,runtime,Chi)
     ! calculates various physical quantities from simulation
-    integer, intent(in)   :: L, m(:), start_time, end_time, N_SWC(:)
+    integer, intent(in) :: L
+    integer(lng), intent(in)   :: m(:), start_time, end_time, N_SW(:)
     real(dp), intent(in)  :: g(:,:), BE(:), r(:)
     integer, intent(out)  :: runtime
     real(dp), intent(out) :: c_ss_fit(:), c_ss(:), Mag, Cv, nu, Chi
     logical, intent(in)   :: calc_css
 
-    real(dp)  :: N_SWC_mean, err_nu, offset
+    real(dp)  :: N_SW_mean, err_nu, offset
     integer   :: N
 
     ! initialize variables
     N = L**2
-    N_SWC_mean = sum(real(N_SWC,dp))/n_meas
+    N_SW_mean = sum(real(N_SW,dp))/n_meas
     Mag = 0._dp
     
-    if (N_SWC_mean > N/2) then
+    if (N_SW_mean > N/2) then
       Mag = sum(real(abs(m),dp))/(n_meas*N)
     endif
 
     ! calculate susceptibility
-    chi = N_SWC_mean/N - Mag**2
+    chi = N_SW_mean/N - Mag**2
     !chi = 1._dp/L**2*sum(real(m,dp)**2)/(n_meas*L**2)
-    !chi = sum(N_SWC**2/L**2)/n_meas 
+    !chi = sum(N_SW**2/L**2)/n_meas 
 
     ! calculate specific heat, per particle
     Cv = sum(BE**2)/n_meas - sum(BE/n_meas)**2
