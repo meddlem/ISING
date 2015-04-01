@@ -8,24 +8,23 @@ program main
   ! variables:
   ! BE: beta*energy,
   ! dE: change in energy between new and initial config
-  ! h: external field
   ! S: array containing Spins indexed as row, column
 
   real(dp), allocatable :: BE(:), c_ss(:), r(:), c_ss_fit(:)
-  real(dp)              :: BJ, nu, chi, Mag, Cv, h
+  real(dp)              :: BJ, nu, chi, Mag, Cv
   integer, allocatable  :: S(:,:), t(:)
   integer               :: runtime, L, method, r_max, n_corr
   logical               :: calc_css
   
   call get_usr_args(method,calc_css) 
-  call user_in(method,BJ,L,h,r_max,n_corr)
+  call user_in(BJ,L,r_max,n_corr)
   allocate(S(L,L),t(n_meas),BE(n_meas),c_ss(r_max),c_ss_fit(r_max),r(r_max))
-
   call init_random_seed()
   call init_lattice(S,L)
-  call run_sim(S,L,method,r_max,n_corr,BE,BJ,h,t,r,Mag,runtime,calc_css,c_ss,&
+
+  call run_sim(S,L,method,r_max,n_corr,BE,BJ,t,r,Mag,runtime,calc_css,c_ss,&
     c_ss_fit,nu,chi,Cv)
-  call results_out(BE,BJ,t,r,h,runtime,calc_css,c_ss,c_ss_fit,nu,chi,Mag,Cv)
   
+  call results_out(BE,BJ,t,r,runtime,calc_css,c_ss,c_ss_fit,nu,chi,Mag,Cv)
   deallocate(S,t,r,BE,c_ss,c_ss_fit)
 end program

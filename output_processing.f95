@@ -1,23 +1,18 @@
-module process_data 
+module output_processing 
   use constants
   implicit none
   private 
-  public :: proc_sim_output
+  public :: calc_chi, calc_corr_function, calc_spec_heat 
 
 contains
-  pure subroutine proc_sim_output(L,N_SW,N_SW_2,m,start_time,end_time,g,r,BE,&
-      calc_css,c_ss_fit,c_ss,nu,Mag,Cv,runtime,Chi,method)
-    ! calculates various physical quantities from simulation
-    integer, intent(in) :: L, method
-    integer(lng), intent(in)   :: m(:), start_time, end_time, N_SW(:), &
-      N_SW_2(:)
-    real(dp), intent(in)  :: g(:,:), BE(:), r(:)
-    integer, intent(out)  :: runtime
-    real(dp), intent(out) :: c_ss_fit(:), c_ss(:), Mag, Cv, nu, Chi
-    logical, intent(in)   :: calc_css
+  pure subroutine calc_chi(L,N_SW,N_SW_2,m,Mag,Chi,method)
+    ! calculates magnetization and susceptibility
+    integer, intent(in)      :: L, method
+    integer(lng), intent(in) :: m(:), N_SW(:), N_SW_2(:)
+    real(dp), intent(out) :: Mag, Chi
 
-    real(dp)  :: N_SW_mean, err_nu, offset
-    integer   :: N
+    real(dp)     :: N_SW_mean
+    integer(lng) :: N
 
     ! initialize variables
     N = L**2
@@ -38,26 +33,33 @@ contains
       !chi = sum(N_SW**2/L**2)/n_meas 
       chi = N_SW_mean/N !sum(real(N_SW_2,dp)/N)/n_meas !N_SW_mean/N !- Mag**2 
     endif
+  end subroutine
 
+  pure subroutine calc_spec_heat(BE,L,Cv)
+    real(dp), intent(in)     :: BE(:)
+    integer(lng), intent(in) :: L
+    real(dp), intent(out)    :: Cv
+
+    integer(lng) :: N
+
+    N = L**2
     ! calculate specific heat, per particle
     Cv = sum(BE**2)/n_meas - sum(BE/n_meas)**2
     Cv = Cv/N
-
-    ! calculate correlation function 
-    if (calc_css) then
-      c_ss = sum(g,1)/n_meas 
-      call lin_fit(nu,err_nu,offset,-log(c_ss),log(r))
-      c_ss_fit = exp(-offset)*r**(-nu)
-    else
-      c_ss = 0._dp 
-      c_ss_fit =  0._dp
-      nu = 0._dp
-    endif
-    
-    ! calculate runtime
-    runtime = (end_time - start_time)/1000
   end subroutine
 
+  pure subroutine calc_corr_function(g,r,c_ss_fit,c_ss,nu)
+    ! calculate correlation function 
+    real(dp), intent(in)  :: g(:,:), r(:)
+    real(dp), intent(out) :: c_ss(:), c_ss_fit(:), nu
+    
+    real(dp) :: offset, err_nu
+
+    c_ss = sum(g,1)/n_meas 
+    call lin_fit(nu,err_nu,offset,-log(c_ss),log(r))
+    c_ss_fit = exp(-offset)*r**(-nu)
+  end subroutine 
+    
   pure subroutine lin_fit(slope,err_slope,offset,y,x)
     real(dp), intent(out) :: slope, err_slope, offset
     real(dp), intent(in)  :: y(:), x(:)

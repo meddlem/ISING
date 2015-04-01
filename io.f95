@@ -30,9 +30,8 @@ contains
     enddo
   end subroutine
 
-  subroutine user_in(method,BJ,L,h,r_max,n_corr)
-    integer, intent(in)   :: method
-    real(dp), intent(out) :: BJ, h
+  subroutine user_in(BJ,L,r_max,n_corr)
+    real(dp), intent(out) :: BJ
     integer, intent(out)  :: L, r_max, n_corr
     
     
@@ -41,10 +40,6 @@ contains
     read(*,*) BJ
     write(*,'(A)',advance='no') "L = " 
     read(*,*) L
-    if (method == 3) then
-      write(*,'(A)',advance='no') "h = " 
-      read(*,*) h
-    endif
     write(*,'(A)') "Running simulation..."
     
     ! set variables
@@ -52,9 +47,9 @@ contains
     r_max = L/4 ! distances over which to calc correlation function
   end subroutine
 
-  subroutine results_out(BE,BJ,t,r,h,runtime,calc_css,c_ss,c_ss_fit,nu, &
+  subroutine results_out(BE,BJ,t,r,runtime,calc_css,c_ss,c_ss_fit,nu, &
       chi,Mag,Cv) 
-    real(dp), intent(in) :: BE(:), BJ, r(:), h, c_ss(:), c_ss_fit(:), &
+    real(dp), intent(in) :: BE(:), BJ, r(:), c_ss(:), c_ss_fit(:), &
       nu, chi, Mag, Cv
     logical, intent(in)  :: calc_css
     integer, intent(in)  :: t(:), runtime
@@ -62,7 +57,6 @@ contains
     open(12,access = 'sequential',file = 'output.txt')
       write(12,'(/,A,/)') '*********** Summary ***********' 
       write(12,*) "Beta*J :", BJ
-      write(12,*) "field :", h 
     
       write(12,'(/,A,/)') '*********** Output ************' 
       write(12,'(A,I6,A)') "Runtime : ", runtime, " s"

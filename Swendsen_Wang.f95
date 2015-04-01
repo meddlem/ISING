@@ -13,8 +13,8 @@ contains
     
     logical, allocatable :: Bond(:,:,:), Mrkd(:,:)
     integer, allocatable :: N_SW_rec(:), C(:,:)
-    integer(lng)  :: k, N
-    integer       :: i, j 
+    integer(lng)         :: k, N
+    integer              :: i, j 
     
     ! allocate needed arrays
     N = int(L,lng)**2
