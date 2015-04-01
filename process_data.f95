@@ -5,11 +5,12 @@ module process_data
   public :: proc_sim_output
 
 contains
-  pure subroutine proc_sim_output(L,N_SW,m,start_time,end_time,g,r,BE,&
-      calc_css,c_ss_fit,c_ss,nu,Mag,Cv,runtime,Chi)
+  pure subroutine proc_sim_output(L,N_SW,N_SW_2,m,start_time,end_time,g,r,BE,&
+      calc_css,c_ss_fit,c_ss,nu,Mag,Cv,runtime,Chi,method)
     ! calculates various physical quantities from simulation
-    integer, intent(in) :: L
-    integer(lng), intent(in)   :: m(:), start_time, end_time, N_SW(:)
+    integer, intent(in) :: L, method
+    integer(lng), intent(in)   :: m(:), start_time, end_time, N_SW(:), &
+      N_SW_2(:)
     real(dp), intent(in)  :: g(:,:), BE(:), r(:)
     integer, intent(out)  :: runtime
     real(dp), intent(out) :: c_ss_fit(:), c_ss(:), Mag, Cv, nu, Chi
@@ -21,16 +22,22 @@ contains
     ! initialize variables
     N = L**2
     N_SW_mean = sum(real(N_SW,dp))/n_meas
-    Mag = 0._dp
     
+    ! calculate magnetization for low temp
     if (N_SW_mean > N/2) then
       Mag = sum(real(abs(m),dp))/(n_meas*N)
+    else 
+      Mag = 0._dp
     endif
 
     ! calculate susceptibility
-    chi = N_SW_mean/N - Mag**2
-    !chi = 1._dp/L**2*sum(real(m,dp)**2)/(n_meas*L**2)
-    !chi = sum(N_SW**2/L**2)/n_meas 
+    if (method==1) then
+      chi = sum(real(N_SW_2,dp)/N**2)/n_meas
+    elseif (method==2) then
+      !chi = 1._dp/L**2*sum(real(m,dp)**2)/(n_meas*L**2)
+      !chi = sum(N_SW**2/L**2)/n_meas 
+      chi = N_SW_mean/N !sum(real(N_SW_2,dp)/N)/n_meas !N_SW_mean/N !- Mag**2 
+    endif
 
     ! calculate specific heat, per particle
     Cv = sum(BE**2)/n_meas - sum(BE/n_meas)**2

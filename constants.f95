@@ -10,7 +10,7 @@ module constants
   integer, parameter :: lng = selected_int_kind(8)
 
   integer, parameter :: steps = 20000 ! number of iterations
-  integer, parameter :: meas_start = 10000 ! start measurement after .. steps 
+  integer, parameter :: meas_start = 12000 ! start measurement after .. steps 
   integer, parameter :: n_meas = steps - meas_start 
   integer, parameter :: plot_interval = 99 ! plot every .. steps
 end module

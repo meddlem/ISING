@@ -2,14 +2,14 @@ module Swendsen_Wang
   use constants
   implicit none
   private 
-  public :: SwWa_clust
+  public :: SW_clust
 
 contains
-  subroutine SwWa_clust(S,L,m,N_SW,p)
+  subroutine SW_clust(S,L,m,N_SW,N_SW_2,p)
     integer, intent(inout)    :: S(:,:)
     real(dp), intent(in)      :: p
     integer, intent(in)       :: L
-    integer(lng), intent(out) :: m, N_SW 
+    integer(lng), intent(out) :: m, N_SW, N_SW_2
     
     logical, allocatable :: Bond(:,:,:), Mrkd(:,:)
     integer, allocatable :: N_SW_rec(:), C(:,:)
@@ -41,8 +41,10 @@ contains
         endif
       enddo
     enddo
-
-    ! remember to return N_SW_rec average or something
+    
+    N_SW = maxval(N_SW_rec) ! max cluster size 
+    N_SW_2 = sum(N_SW_rec**2) ! average squared cluster size
+    ! real??
     m = sum(S) ! calculate instantaneous magnetization
     deallocate(Bond,Mrkd,N_SW_rec)
   end subroutine

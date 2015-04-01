@@ -19,31 +19,33 @@ contains
     integer, intent(out)    :: t(:), runtime
     real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), Mag, nu, chi, Cv
 
-    integer(lng), allocatable :: N_SW(:), m(:)
+    integer(lng), allocatable :: N_SW(:), N_SW_2(:), m(:)
     real(dp), allocatable     :: g(:,:)
-    integer(lng) :: start_time, m_tmp, N_SW_tmp, end_time
+    integer(lng) :: start_time, m_tmp, N_SW_tmp, N_SW_2_tmp, end_time
     integer      :: i, j 
     real(dp)     :: p
     
-    allocate(g(n_meas,r_max),N_SW(n_meas),m(n_meas))
+    allocate(g(n_meas,r_max),N_SW(n_meas),N_SW_2(n_meas),m(n_meas))
     ! initialize needed variables
     j = 0
     t = (/(i,i=0,n_meas-1)/)
     r = real((/(i,i=1,r_max)/),dp)
     p = 1 - exp(-2._dp*BJ)
     N_SW_tmp = 0
+    N_SW_2_tmp = 0
     m_tmp = 0
 
     call animate_lattice()
     
     call system_clock(start_time)
     do i=1,steps
-      call gen_config(S,L,m_tmp,N_SW_tmp,p,method)
+      call gen_config(S,L,m_tmp,N_SW_tmp,N_SW_2_tmp,p,method)
 
       if (i >= meas_start) then
         j = j+1
         m(j) = m_tmp ! record magnetization
         N_SW(j) = N_SW_tmp ! record clustersize
+        N_SW_2(j) = N_SW_2_tmp ! squared cluster size
 
         if (calc_css) call s_corr(g(j,:),S,L,r_max,n_corr)
         call calc_energy(BE(j),S,L,BJ,h)
@@ -54,21 +56,22 @@ contains
     call system_clock(end_time)
     
     call close_lattice_plot()
-    call proc_sim_output(L,N_SW,m,start_time,end_time,g,r,BE,&
-      calc_css,c_ss_fit,c_ss,nu,Mag,Cv,runtime,Chi)
+    call proc_sim_output(L,N_SW,N_SW_2,m,start_time,end_time,g,r,BE,&
+      calc_css,c_ss_fit,c_ss,nu,Mag,Cv,runtime,Chi,method)
     deallocate(g,N_SW,m)
   end subroutine
 
-  subroutine gen_config(S,L,m,N_SW,p,method)
+  subroutine gen_config(S,L,m,N_SW,N_SW_2,p,method)
     integer, intent(inout)    :: S(:,:)
     real(dp), intent(in)      :: p
     integer, intent(in)       :: L, method
-    integer(lng), intent(out) :: m, N_SW ! fix dit nog 
+    integer(lng), intent(out) :: m, N_SW, N_SW_2 
     
     if (method == 1) then
-      call SwWa_clust(S,L,m,N_SW,p)
+      call SW_clust(S,L,m,N_SW,N_SW_2,p)
     elseif (method == 2) then
       call Wolff_clust(S,L,m,N_SW,p)
+      N_SW_2 = N_SW**2
     endif
   end subroutine
   
