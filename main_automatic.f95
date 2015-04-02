@@ -13,7 +13,7 @@ program main
   ! S: array containing Spins indexed as row, column
 
   real(dp), allocatable :: BE(:), c_ss(:), r(:), c_ss_fit(:)
-  real(dp)              :: BJ, alpha, chi, Cv, h = 0._dp
+  real(dp)              :: BJ, alpha, chi, Cv, h = 0._dp, energy, mag, Uc
   integer, allocatable  :: S(:,:), m(:), t(:)
   integer               :: runtime, L, N, r_max, n_corr, i, j
 
@@ -38,7 +38,7 @@ program main
     call animate_lattice('')
     
     call run_sim(S,L,r_max,n_corr,BE,BJ,h,t,r,m,runtime,c_ss,c_ss_fit,alpha,&
-      chi, Cv)
+      chi, Cv, energy, mag, Uc)
     
     call close_lattice_plot()
     call results_out(BJ,BE(n_meas),h,runtime,alpha, chi, Cv)
@@ -67,6 +67,12 @@ contains
       integer               :: i
       real(dp), dimension(N_steps), intent(out) :: output_var
       forall (i=1:N_steps) output_var(i) = (stop_var - start_var)/N_steps*i
+  end subroutine
+
+  subroutine critical_temp(Uc, BJ, BJc) 
+    real(dp), intent(in)  :: Uc(:), BJ(:)
+    real(dp), intent(out) :: BJc
+    BJc = 0_dp
   end subroutine
 
 end program

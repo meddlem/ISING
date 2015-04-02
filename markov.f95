@@ -8,18 +8,18 @@ module markov
 
 contains
   subroutine run_sim(S,L,r_max,n_corr,BE,BJ,h,t,r,m,runtime,c_ss,c_ss_fit,&
-      alpha,chi,Cv)
+      alpha,chi,Cv, energy, Mag, Uc)
     integer, intent(inout)  :: S(:,:)
     real(dp), intent(inout) :: BE(:), BJ
     integer, intent(in)     :: L, r_max, n_corr
     real(dp), intent(in)    :: h
     integer, intent(out)    :: t(:), m(:), runtime
-    real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), alpha, chi, Cv
+    real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), alpha, chi, Cv, energy, Mag, Uc
 
     integer, allocatable    :: N_SWC(:)
     real(dp), allocatable   :: g(:,:)
     integer  :: i, j, start_time, m_tmp, N_SWC_tmp, end_time
-    real(dp) :: p, Mag, N_SWC_avg, offset, err_alpha
+    real(dp) :: p, N_SWC_avg, offset, err_alpha
     
     allocate(g(n_meas,r_max),N_SWC(n_meas))
     ! initialize needed variables
@@ -46,18 +46,24 @@ contains
     call system_clock(end_time)
     runtime = (end_time - start_time)/1000
 
-    N_SWC_avg = sum(real(N_SWC,dp))/n_meas
-    Mag = 0._dp
-    if (N_SWC_avg > (L**2)/2) Mag = sum(real(abs(m),dp))/(n_meas*L**2)
-    ! misschien beter Mag returnen??
+    ! absolute magnetization per particle
+    Mag = sum(real(abs(m),dp))/(n_meas*L**2)
 
-    ! calculate susceptibility
-    chi = N_SWC_avg/L**2 - Mag**2
-    !chi_alt = 1._dp/L**2*sum(real(m,dp)**2)/(n_meas*L**2)
+    ! calculate susceptibility per particle
+    N_SWC_avg = sum(real(N_SWC,dp))/n_meas
+    chi = N_SWC_avg/L**2
+    ! chi_alt = 1._dp/L**2*sum(real(m,dp)**2)/(n_meas*L**2)
+    ! if (N_SWC_avg > (L**2)/2) chi = chi  - Mag**2
+
+    ! energy per particle
+    energy = sum(BE)/n_meas
 
     ! calculate specific heat, per particle
     Cv = sum(BE**2)/n_meas - sum(BE/n_meas)**2
     Cv = Cv/L**2
+
+    ! binder cumulant
+    Uc = 1 - (sum(m**4)/n_meas)/(3_dp*sum(m**2)/n_meas)**2
 
     ! calculate correlation function 
     c_ss = sum(g,1)/n_meas 
