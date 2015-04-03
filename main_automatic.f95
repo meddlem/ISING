@@ -13,13 +13,14 @@ program main
   ! S: array containing Spins indexed as row, column
 
   real(dp), allocatable :: BE(:), c_ss(:), r(:), c_ss_fit(:)
-  real(dp)              :: BJ, alpha, chi, Cv, h = 0._dp, energy, mag, Uc
+  real(dp)              :: BJ, h = 0._dp 
   integer, allocatable  :: S(:,:), m(:), t(:)
   integer               :: runtime, L, N, r_max, n_corr, i, j
 
   integer, parameter  :: lattice_lengths(1:7) = (/8, 16, 32, 64, 128, 256, 512/)
   integer, parameter  :: N_BJ_STEPS = 10
-  real(dp) :: spin_coupling_energies(N_BJ_STEPS) 
+  real(dp), dimension(7, N_BJ_STEPS) :: energy, mag, Uc, alpha, chi, Cv
+  real(dp), dimension(N_BJ_STEPS)    :: spin_coupling_energies
   call linspace(spin_coupling_energies, 0d0,1d0,N_BJ_STEPS)
 
   do i = 1, size(lattice_lengths)
@@ -37,11 +38,11 @@ program main
     call init_lattice(S,L)
     call animate_lattice('')
     
-    call run_sim(S,L,r_max,n_corr,BE,BJ,h,t,r,m,runtime,c_ss,c_ss_fit,alpha,&
-      chi, Cv, energy, mag, Uc)
+    call run_sim(S,L,r_max,n_corr,BE,BJ,h,t,r,m,runtime,c_ss,c_ss_fit,alpha(i,j),&
+      chi(i,j), Cv(i,j), energy(i,j), mag(i,j), Uc(i,j))
     
     call close_lattice_plot()
-    call results_out(BJ,BE(n_meas),h,runtime,alpha, chi, Cv)
+    call results_out(BJ,BE(n_meas),h,runtime,alpha(i,j), chi(i,j), Cv(i,j))
     call line_plot(real(t,dp),BE,'t','energy','','',1)
     call line_plot(real(t,dp),real(m,dp),'t','magnetization','','',2)
     call line_plot(r,c_ss,'r','corr','corr','',3,c_ss_fit,'fit')
@@ -70,9 +71,26 @@ contains
   end subroutine
 
   subroutine critical_temp(Uc, BJ, BJc) 
-    real(dp), intent(in)  :: Uc(:), BJ(:)
+    real(dp), intent(in)  :: Uc(:,:), BJ(:)
     real(dp), intent(out) :: BJc
-    BJc = 0_dp
+    integer               :: i,j,k, N_lattices
+    real(dp)              :: MeanUc, er(size(BJ))
+
+    er = 0
+    N_lattices = size(BJ)
+                                                ! v Hier gebeurt wat vreemds
+    forall (i=1:N_lattices) MeanUc(i) = sum(Uc(:,i))/N_lattices
+
+    do i = 1, N_lattices! lattice
+      do j = 1, N_lattices
+        if (j/=i) er(k) =  er(k) + (Uc(i,k) -  MeanUc(k))**2
+      end do
+    end do
+
+    BJc = BJ(minloc(er, 1))
+    ! Dit maakt een fout in de orde van grootte van de temperatuur stap
+    ! Iets van interpolatie moet hierin nog toegevoegd worden
+
   end subroutine
 
 end program
