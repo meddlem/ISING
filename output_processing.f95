@@ -5,21 +5,25 @@ module output_processing
   public :: calc_chi, calc_corr_function, calc_spec_heat 
 
 contains
-  pure subroutine calc_chi(L,N_SW,N_SW_2,m,Mag,err_Mag,chi,err_chi,method)
+  pure subroutine calc_chi(L,N_SW,N_SW_2,m,Mag,err_Mag,chi_s,chi,err_chi,method)
     ! calculates magnetization and susceptibility
     integer, intent(in)      :: L, method
     integer(lng), intent(in) :: m(:), N_SW(:), N_SW_2(:)
-    real(dp), intent(out) :: Mag, err_Mag, chi, err_chi
+    real(dp), intent(out) :: Mag, err_Mag, chi, chi_s, err_chi
 
     real(dp) :: N_SW_mean, N
+    real(dp), allocatable :: m_r(:)
+
+    allocate(m_r(n_meas))
 
     ! initialize variables
     N = real(L,dp)**2
     N_SW_mean = sum(real(N_SW,dp))/n_meas
+    m_r = real(m,dp)
     
     ! calculate magnetization for low temp
     if (N_SW_mean > N/2) then
-      Mag = sum(real(abs(m),dp))/(n_meas*N)
+      Mag = sum(abs(m_r))/(n_meas*N)
     else 
       Mag = 0._dp
     endif
@@ -29,12 +33,14 @@ contains
       chi = sum(real(N_SW_2,dp)/N**2)/n_meas
       err_chi = std_err(real(N_SW_2,dp)/N**2)
     elseif (method==2) then
-      !chi = 1._dp/L**2*sum(real(m,dp)**2)/(n_meas*L**2)
-      chi = N_SW_mean/N !sum(real(N_SW_2,dp)/N)/n_meas !N_SW_mean/N !- Mag**2 
+      chi = N_SW_mean/N 
       err_chi = std_err(real(N_SW,dp)/N)
     endif
 
-    err_Mag = std_err(real(m,dp)/N)
+    chi_s = (sum(abs(m_r/N)**2)/n_meas - sum(abs(m_r/N)/n_meas)**2)
+    ! also calculate the error for chi_s..
+    err_Mag = std_err(m_r/N)
+    deallocate(m_r)
   end subroutine
 
   pure subroutine calc_spec_heat(BE,L,Cv,err_Cv)
@@ -43,10 +49,9 @@ contains
     integer(lng), intent(in) :: L
     real(dp), intent(out)    :: Cv, err_Cv
     
-    real(dp)     :: mu_BE, mu_BE_2, mu_BE_4
-    integer(lng) :: N
+    real(dp)     :: N, mu_BE, mu_BE_2, mu_BE_4
 
-    N = L**2
+    N = real(L,dp)**2
     mu_BE = sum(BE)/n_meas
     mu_BE_2 = sum((BE-mu_BE)**2)/n_meas
     mu_BE_4 = sum(block_avg(BE-mu_BE)**4)/n_blocks**2
@@ -98,7 +103,6 @@ contains
 
     mu_x = sum(x)/size(x)
     mu_y = sum(y)/size(y)
-
     ss_yy = sum((y - mu_y)**2)
     ss_xx = sum((x - mu_x)**2)
     ss_yx = sum((x - mu_x)*(y - mu_y))
@@ -107,6 +111,6 @@ contains
     offset = mu_y - slope*mu_x
     s = sqrt((ss_yy - slope*ss_yx)/(size(x)-2))
 
-    err_slope = s/(sqrt(ss_xx)*6._dp) ! error in slope calc
+    err_slope = s/(sqrt(ss_xx)*6._dp) 
   end subroutine
 end module

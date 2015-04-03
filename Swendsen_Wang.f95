@@ -44,7 +44,6 @@ contains
     
     N_SW = maxval(N_SW_rec) ! max cluster size 
     N_SW_2 = sum(N_SW_rec**2) ! average squared cluster size
-    ! real??
     m = sum(S) ! calculate instantaneous magnetization
     deallocate(Bond,Mrkd,N_SW_rec)
   end subroutine

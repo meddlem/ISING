@@ -10,14 +10,14 @@ module markov
 
 contains
   subroutine run_sim(S,method,r_max,n_corr,BE,BJ,r,Mag,err_Mag,runtime, &
-      calc_css,c_ss,c_ss_fit,nu,err_nu,chi,err_chi,Cv,err_Cv)
+      calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s,chi,err_chi,Cv,err_Cv)
     integer, intent(inout)  :: S(:,:)
     real(dp), intent(inout) :: BE(:), BJ
     integer, intent(in)     :: method, r_max, n_corr
     logical, intent(in)     :: calc_css
     integer, intent(out)    :: runtime
     real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), Mag, err_Mag, nu, &
-      err_nu, chi, err_chi, Cv, err_Cv
+      err_nu, chi_s, chi, err_chi, Cv, err_Cv
 
     integer(lng), allocatable :: N_SW(:), N_SW_2(:), m(:)
     real(dp), allocatable     :: g(:,:)
@@ -54,14 +54,16 @@ contains
         call calc_energy(BE(j),S,L,BJ)
       endif
 
-      if (mod(i,plot_interval) == 0) call write_lattice(S,L) ! pipe
+      if (mod(i,plot_interval) == 0) then
+        call write_lattice(S,L) ! write lattice to pipe
+      endif
     enddo    
     
     call system_clock(end_time)
     call close_lattice_plot()
     
     ! calculate ensemble averages
-    call calc_chi(L,N_SW,N_SW_2,m,Mag,err_Mag,Chi,err_chi,method)
+    call calc_chi(L,N_SW,N_SW_2,m,Mag,err_Mag,chi_s,chi,err_chi,method)
     call calc_spec_heat(BE,L,Cv,err_Cv)
     if (calc_css) call calc_corr_function(g,r,c_ss_fit,c_ss,nu,err_nu)
     
