@@ -11,7 +11,7 @@ program main
   ! S: array containing Spins indexed as row, column
 
   real(dp), allocatable :: BE(:), c_ss(:), r(:), c_ss_fit(:)
-  real(dp)              :: BJ, nu, chi, Mag, Cv
+  real(dp)              :: BJ, nu, chi, err_chi, Mag, err_Mag, Cv, err_Cv
   integer, allocatable  :: S(:,:), t(:)
   integer               :: runtime, L, method, r_max, n_corr
   logical               :: calc_css
@@ -22,9 +22,10 @@ program main
   call init_random_seed()
   call init_lattice(S,L)
 
-  call run_sim(S,L,method,r_max,n_corr,BE,BJ,t,r,Mag,runtime,calc_css,c_ss,&
-    c_ss_fit,nu,chi,Cv)
+  call run_sim(S,L,method,r_max,n_corr,BE,BJ,t,r,Mag,err_Mag,runtime,&
+    calc_css,c_ss,c_ss_fit,nu,chi,err_chi,Cv,err_Cv)
   
-  call results_out(BE,BJ,t,r,runtime,calc_css,c_ss,c_ss_fit,nu,chi,Mag,Cv)
+  call results_out(BE,BJ,t,r,runtime,calc_css,c_ss,c_ss_fit,nu,chi,err_chi,&
+    Mag,err_Mag,Cv,err_Cv)
   deallocate(S,t,r,BE,c_ss,c_ss_fit)
 end program

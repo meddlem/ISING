@@ -9,14 +9,15 @@ module markov
   public :: run_sim
 
 contains
-  subroutine run_sim(S,L,method,r_max,n_corr,BE,BJ,t,r,Mag,runtime, &
-      calc_css,c_ss,c_ss_fit,nu,chi,Cv)
+  subroutine run_sim(S,L,method,r_max,n_corr,BE,BJ,t,r,Mag,err_Mag,runtime, &
+      calc_css,c_ss,c_ss_fit,nu,chi,err_chi,Cv,err_Cv)
     integer, intent(inout)  :: S(:,:)
     real(dp), intent(inout) :: BE(:), BJ
     integer, intent(in)     :: L, method, r_max, n_corr
     logical, intent(in)     :: calc_css
     integer, intent(out)    :: t(:), runtime
-    real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), Mag, nu, chi, Cv
+    real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), Mag, err_Mag, nu, &
+      chi, err_chi, Cv, err_Cv
 
     integer(lng), allocatable :: N_SW(:), N_SW_2(:), m(:)
     real(dp), allocatable     :: g(:,:)
@@ -27,12 +28,12 @@ contains
     allocate(g(n_meas,r_max),N_SW(n_meas),N_SW_2(n_meas),m(n_meas))
     ! initialize needed variables
     j = 0
-    t = (/(i,i=0,n_meas-1)/)
-    r = real((/(i,i=1,r_max)/),dp)
-    p = 1 - exp(-2._dp*BJ)
     N_SW_tmp = 0
     N_SW_2_tmp = 0
     m_tmp = 0
+    t = (/(i,i=0,n_meas-1)/)
+    r = real((/(i,i=1,r_max)/),dp)
+    p = 1 - exp(-2._dp*BJ)
 
     call animate_lattice()
     
@@ -57,13 +58,13 @@ contains
     call close_lattice_plot()
     
     ! calculate ensemble averages
-    call calc_chi(L,N_SW,N_SW_2,m,Mag,Chi,method)
-    call calc_spec_heat(BE,L,Cv)
+    call calc_chi(L,N_SW,N_SW_2,m,Mag,err_Mag,Chi,err_chi,method)
+    call calc_spec_heat(BE,L,Cv,err_Cv)
     if (calc_css) call calc_corr_function(g,r,c_ss_fit,c_ss,nu)
     
     ! calculate runtime
     runtime = (end_time - start_time)/1000
-   
+
     deallocate(g,N_SW,m)
   end subroutine
 

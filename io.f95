@@ -48,11 +48,14 @@ contains
   end subroutine
 
   subroutine results_out(BE,BJ,t,r,runtime,calc_css,c_ss,c_ss_fit,nu, &
-      chi,Mag,Cv) 
+      chi,err_chi,Mag,err_Mag,Cv,err_Cv) 
     real(dp), intent(in) :: BE(:), BJ, r(:), c_ss(:), c_ss_fit(:), &
-      nu, chi, Mag, Cv
+      nu, chi, err_chi, Mag, err_Mag, Cv, err_Cv
     logical, intent(in)  :: calc_css
     integer, intent(in)  :: t(:), runtime
+    character(30) :: output_fmt
+
+    output_fmt = '(A,T25,F8.4,A,F8.4)'
 
     open(12,access = 'sequential',file = 'output.txt')
       write(12,'(/,A,/)') '*********** Summary ***********' 
@@ -60,9 +63,9 @@ contains
     
       write(12,'(/,A,/)') '*********** Output ************' 
       write(12,'(A,I6,A)') "Runtime : ", runtime, " s"
-      write(12,*) "specific heat", Cv
-      write(12,*) "Magnetization", Mag
-      write(12,*) "(unsubtracted) susceptibility", chi
+      write(12,output_fmt) "specific heat", Cv, " ± ", err_Cv 
+      write(12,output_fmt) "Magnetization", Mag, " ± ", err_Mag
+      write(12,output_fmt) "susceptibility", chi, " ± ", err_chi 
       if (calc_css) write(12,*) "nu: ", nu
       write(12,'(/,A,/)') '*******************************' 
     close(12)
