@@ -11,11 +11,10 @@ contains
     integer(lng), intent(in) :: m(:), N_SW(:), N_SW_2(:)
     real(dp), intent(out) :: Mag, err_Mag, chi, err_chi
 
-    real(dp)     :: N_SW_mean
-    integer(lng) :: N
+    real(dp) :: N_SW_mean, N
 
     ! initialize variables
-    N = L**2
+    N = real(L,dp)**2
     N_SW_mean = sum(real(N_SW,dp))/n_meas
     
     ! calculate magnetization for low temp
@@ -56,12 +55,12 @@ contains
     err_Cv = sqrt(mu_BE_4)/N
   end subroutine
 
-  pure subroutine calc_corr_function(g,r,c_ss_fit,c_ss,nu)
+  pure subroutine calc_corr_function(g,r,c_ss_fit,c_ss,nu,err_nu)
     ! calculate correlation function 
     real(dp), intent(in)  :: g(:,:), r(:)
-    real(dp), intent(out) :: c_ss(:), c_ss_fit(:), nu
+    real(dp), intent(out) :: c_ss(:), c_ss_fit(:), nu, err_nu
     
-    real(dp) :: offset, err_nu
+    real(dp) :: offset
 
     c_ss = sum(g,1)/n_meas 
     call lin_fit(nu,err_nu,offset,-log(c_ss),log(r))

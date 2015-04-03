@@ -34,7 +34,6 @@ contains
     real(dp), intent(out) :: BJ
     integer, intent(out)  :: L, r_max, n_corr
     
-    
     write(*,'(/,A,/)') '************ Input *************' 
     write(*,'(A)',advance='no') "Beta*J = " 
     read(*,*) BJ
@@ -47,14 +46,20 @@ contains
     r_max = L/4 ! distances over which to calc correlation function
   end subroutine
 
-  subroutine results_out(BE,BJ,t,r,runtime,calc_css,c_ss,c_ss_fit,nu, &
+  subroutine results_out(BE,BJ,r,runtime,calc_css,c_ss,c_ss_fit,nu,err_nu, &
       chi,err_chi,Mag,err_Mag,Cv,err_Cv) 
     real(dp), intent(in) :: BE(:), BJ, r(:), c_ss(:), c_ss_fit(:), &
-      nu, chi, err_chi, Mag, err_Mag, Cv, err_Cv
+      nu, err_nu, chi, err_chi, Mag, err_Mag, Cv, err_Cv
     logical, intent(in)  :: calc_css
-    integer, intent(in)  :: t(:), runtime
-    character(30) :: output_fmt
+    integer, intent(in)  :: runtime
 
+    real(dp), allocatable :: t(:)
+    integer               :: i
+    character(30)         :: output_fmt
+
+    allocate(t(n_meas))
+    ! init
+    forall(i=0:n_meas-1) t(i+1) = real(i,dp)
     output_fmt = '(A,T25,F8.4,A,F8.4)'
 
     open(12,access = 'sequential',file = 'output.txt')
@@ -66,7 +71,7 @@ contains
       write(12,output_fmt) "specific heat", Cv, " ± ", err_Cv 
       write(12,output_fmt) "Magnetization", Mag, " ± ", err_Mag
       write(12,output_fmt) "susceptibility", chi, " ± ", err_chi 
-      if (calc_css) write(12,*) "nu: ", nu
+      if (calc_css) write(12,output_fmt) "nu: ", nu, " ± ", err_nu 
       write(12,'(/,A,/)') '*******************************' 
     close(12)
     
@@ -78,5 +83,6 @@ contains
     endif
     
     call system('cat output.txt')
+    deallocate(t)
   end subroutine
 end module

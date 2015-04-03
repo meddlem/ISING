@@ -5,6 +5,8 @@ module constants
   ! dp: compiler specific kind for double precision float
   ! lng: compiler specific kind for long integer
   ! steps: number of iterations to perform for fixed lattice size, temp
+  ! n_avg: number of steps to take block average over
+  ! n_blocks: number of data blocks
   ! meas_start: start of measurment after .. steps
   ! n_meas: total number of measurements
   ! plot_interval: plot every .. iterations

@@ -9,35 +9,38 @@ module markov
   public :: run_sim
 
 contains
-  subroutine run_sim(S,L,method,r_max,n_corr,BE,BJ,t,r,Mag,err_Mag,runtime, &
-      calc_css,c_ss,c_ss_fit,nu,chi,err_chi,Cv,err_Cv)
+  subroutine run_sim(S,method,r_max,n_corr,BE,BJ,r,Mag,err_Mag,runtime, &
+      calc_css,c_ss,c_ss_fit,nu,err_nu,chi,err_chi,Cv,err_Cv)
     integer, intent(inout)  :: S(:,:)
     real(dp), intent(inout) :: BE(:), BJ
-    integer, intent(in)     :: L, method, r_max, n_corr
+    integer, intent(in)     :: method, r_max, n_corr
     logical, intent(in)     :: calc_css
-    integer, intent(out)    :: t(:), runtime
+    integer, intent(out)    :: runtime
     real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), Mag, err_Mag, nu, &
-      chi, err_chi, Cv, err_Cv
+      err_nu, chi, err_chi, Cv, err_Cv
 
     integer(lng), allocatable :: N_SW(:), N_SW_2(:), m(:)
     real(dp), allocatable     :: g(:,:)
     integer(lng) :: start_time, m_tmp, N_SW_tmp, N_SW_2_tmp, end_time
-    integer      :: i, j 
+    integer      :: i, j, L
     real(dp)     :: p
     
-    allocate(g(n_meas,r_max),N_SW(n_meas),N_SW_2(n_meas),m(n_meas))
     ! initialize needed variables
+    L = size(S,1)
     j = 0
     N_SW_tmp = 0
     N_SW_2_tmp = 0
     m_tmp = 0
-    t = (/(i,i=0,n_meas-1)/)
     r = real((/(i,i=1,r_max)/),dp)
     p = 1 - exp(-2._dp*BJ)
-
-    call animate_lattice()
     
+    ! allocate memory
+    allocate(g(n_meas,r_max),N_SW(n_meas),N_SW_2(n_meas),m(n_meas))
+    
+    call animate_lattice()
     call system_clock(start_time)
+    
+    ! run markov chain
     do i=1,steps
       call gen_config(S,L,m_tmp,N_SW_tmp,N_SW_2_tmp,p,method)
 
@@ -53,19 +56,19 @@ contains
 
       if (mod(i,plot_interval) == 0) call write_lattice(S,L) ! pipe
     enddo    
-    call system_clock(end_time)
     
+    call system_clock(end_time)
     call close_lattice_plot()
     
     ! calculate ensemble averages
     call calc_chi(L,N_SW,N_SW_2,m,Mag,err_Mag,Chi,err_chi,method)
     call calc_spec_heat(BE,L,Cv,err_Cv)
-    if (calc_css) call calc_corr_function(g,r,c_ss_fit,c_ss,nu)
+    if (calc_css) call calc_corr_function(g,r,c_ss_fit,c_ss,nu,err_nu)
     
     ! calculate runtime
     runtime = (end_time - start_time)/1000
 
-    deallocate(g,N_SW,m)
+    deallocate(g,N_SW,N_SW_2,m)
   end subroutine
 
   subroutine gen_config(S,L,m,N_SW,N_SW_2,p,method)
