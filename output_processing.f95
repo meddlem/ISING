@@ -21,12 +21,12 @@ contains
     N_SW_mean = sum(real(N_SW,dp))/n_meas
     m_r = real(m,dp)
     
-    ! calculate magnetization for low temp
-    if (N_SW_mean > N/2) then
-      Mag = sum(abs(m_r))/(n_meas*N)
-    else 
-      Mag = 0._dp
-    endif
+    ! calculate magnetization
+    !if (N_SW_mean > N/2) then
+    Mag = sum(abs(m_r))/(n_meas*N)
+    !else 
+    !  Mag = 0._dp
+    !endif
 
     ! calculate susceptibility
     if (method==1) then
@@ -37,7 +37,7 @@ contains
       err_chi = std_err(real(N_SW,dp)/N)
     endif
 
-    chi_s = (sum(abs(m_r/N)**2)/n_meas - sum(abs(m_r/N)/n_meas)**2)
+    chi_s = (sum(abs(m_r)**2)/n_meas - sum(abs(m_r)/n_meas)**2)/N
     ! also calculate the error for chi_s..
     err_Mag = std_err(m_r/N)
     deallocate(m_r)

@@ -26,7 +26,7 @@ program main
   call run_sim(S,method,r_max,n_corr,BE,BJ,r,Mag,err_Mag,runtime,&
     calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s,chi,err_chi,Cv,err_Cv)
   
-  call results_out(BE,BJ,r,runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s, &
+  call results_out(BE,BJ,L,r,runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s, &
     chi,err_chi,Mag,err_Mag,Cv,err_Cv)
   deallocate(S,r,BE,c_ss,c_ss_fit)
 end program

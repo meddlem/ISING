@@ -46,22 +46,24 @@ contains
     r_max = L/4 ! distances over which to calc correlation function
   end subroutine
 
-  subroutine results_out(BE,BJ,r,runtime,calc_css,c_ss,c_ss_fit,nu,err_nu, &
+  subroutine results_out(BE,BJ,L,r,runtime,calc_css,c_ss,c_ss_fit,nu,err_nu, &
       chi_s,chi,err_chi,Mag,err_Mag,Cv,err_Cv) 
     real(dp), intent(in) :: BE(:), BJ, r(:), c_ss(:), c_ss_fit(:), &
       nu, err_nu, chi_s, chi, err_chi, Mag, err_Mag, Cv, err_Cv
     logical, intent(in)  :: calc_css
-    integer, intent(in)  :: runtime
+    integer, intent(in)  :: L, runtime
 
     real(dp), allocatable :: t(:)
+    character(30)         :: output_fmt, row_fmt
     integer               :: i
-    character(30)         :: output_fmt
+    logical               :: exs
 
     allocate(t(n_meas))
     ! init
     forall(i=0:n_meas-1) t(i+1) = real(i,dp)
-    output_fmt = '(A,T25,F8.4,A,F8.4)'
-
+    output_fmt = '(A,T25,F9.4,A,F8.4)'
+    row_fmt  = '(F7.5,3X,F7.5,3X,F8.5)'
+    
     open(12,access = 'sequential',file = 'output.txt')
       write(12,'(/,A,/)') '*********** Summary ***********' 
       write(12,*) "Beta*J :", BJ
@@ -83,6 +85,17 @@ contains
       call line_plot(r,c_ss,'r','corr','corr','',3,c_ss_fit,'fit')
     endif
     
+    ! append mag calculation result to file
+    inquire(file='LvsM.dat',exist=exs)
+    if (exs) then
+      open(12,file ='LvsM.dat',status='old',position='append',&
+        action='write')
+    else 
+      open(12,file ='LvsM.dat',status='new',action='write')
+    endif
+      write(12,row_fmt) log(real(L,dp)), log(Mag), log(chi_s)
+    close(12)
+
     call system('cat output.txt')
     deallocate(t)
   end subroutine
