@@ -62,7 +62,7 @@ contains
     ! init
     forall(i=0:n_meas-1) t(i+1) = real(i,dp)
     output_fmt = '(A,T25,F9.4,A,F8.4)'
-    row_fmt  = '(F7.5,3X,F7.5,3X,F8.5)'
+    row_fmt  = '(F7.5,3X,F8.5,3X,F8.5,3X,F8.5)'
     
     open(12,access = 'sequential',file = 'output.txt')
       write(12,'(/,A,/)') '*********** Summary ***********' 
@@ -93,7 +93,7 @@ contains
     else 
       open(12,file ='LvsM.dat',status='new',action='write')
     endif
-      write(12,row_fmt) log(real(L,dp)), log(Mag), log(chi_s)
+      write(12,row_fmt) log(real(L,dp)), log(Mag), log(chi_s), Cv
     close(12)
 
     call system('cat output.txt')
