@@ -33,13 +33,16 @@ contains
     enddo
   end subroutine
 
-  subroutine user_in(BJ,L,r_max,n_corr)
-    real(dp), intent(out) :: BJ
+  subroutine user_in(auto,L,r_max,n_corr,BJ)
+    logical, intent(in)   :: auto
     integer, intent(out)  :: L, r_max, n_corr
+    real(dp), intent(out), optional :: BJ
     
     write(*,'(/,A,/)') '************ Input *************' 
-    write(*,'(A)',advance='no') "Beta*J = " 
-    read(*,*) BJ
+    if (.not. auto) then
+      write(*,'(A)',advance='no') "Beta*J = " 
+      read(*,*) BJ
+    endif
     write(*,'(A)',advance='no') "L = " 
     read(*,*) L
     write(*,'(A)') "Running simulation..."
@@ -101,24 +104,20 @@ contains
     deallocate(t)
   end subroutine
 
-  subroutine auto_results(L,BJ,Mag,chi_s,Cv)
-    integer, intent(in)  :: L(:)
-    real(dp), intent(in) :: BJ(:), Mag(:,:), chi_s(:,:), Cv(:,:)
+  subroutine auto_results(L,BJ,Q,Mag,chi_s,Cv)
+    integer, intent(in)  :: L
+    real(dp), intent(in) :: BJ(:), Q(:), Mag(:), chi_s(:), Cv(:)
     
     character(40)        :: row_fmt, filename
-    integer              :: i, j, L_s, T_s
+    integer              :: i
 
-    row_fmt  = '(F7.5,3X,F8.5,3X,F10.5,3X,F8.5)'
-    L_s = size(L)
-    T_s = size(BJ)
+    row_fmt  = '(F7.5,3X,F8.5,3X,F10.5,3X,F8.5,3X,F8.5)'
+    write(filename,'(A,I0,A)') 'results',L,'.dat'
     
-    do i=1,L_s
-      write(filename,'(A,I0,A)') 'results',L(i),'.dat'
-      open(12,file = filename)
-      do j=1,T_s
-        write(12,row_fmt) BJ(j), Mag(i,j), chi_s(i,j), Cv(i,j)
+    open(12,file = filename)
+      do i=1,size(BJ)
+        write(12,row_fmt) BJ(i), Mag(i), chi_s(i), Cv(i), Q(i)
       enddo
-      close(12)
-    enddo
+    close(12)
   end subroutine
 end module

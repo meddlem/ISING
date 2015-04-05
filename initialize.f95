@@ -2,7 +2,7 @@ module initialize
   use constants
   implicit none
   private
-  public :: init_random_seed, init_lattice, init_LT
+  public :: init_random_seed, init_lattice, init_BJ
 
 contains
   subroutine init_lattice(S, L)
@@ -19,15 +19,13 @@ contains
     deallocate(u)
   end subroutine 
 
-  pure subroutine init_LT(L_s,T_s,L,BJ)
+  pure subroutine init_BJ(T_s,BJ)
     real(dp), intent(out) :: BJ(:)
-    integer, intent(out)  :: L(:)
-    integer, intent(in)   :: L_s, T_s
+    integer, intent(in)   :: T_s
 
     integer :: i
 
-    forall(i=1:L_s) L(i) = 2**i
-    forall(i=1:T_s) BJ(i) = 0.44_dp + 0.002_dp*(i-10)
+    forall(i=1:T_s) BJ(i) = 0.44_dp + 0.002_dp*(i-T_s/2)
   end subroutine
   
   ! initialize random seed, taken from ICCP github

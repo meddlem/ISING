@@ -22,11 +22,7 @@ contains
     m_r = real(m,dp)
     
     ! calculate magnetization
-    !if (N_SW_mean > N/2) then
     Mag = sum(abs(m_r))/(n_meas*N)
-    !else 
-    !  Mag = 0._dp
-    !endif
 
     ! calculate susceptibility
     if (method==1) then
