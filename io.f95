@@ -3,7 +3,7 @@ module io
   use plotroutines
   implicit none
   private
-  public :: get_usr_args, user_in, results_out
+  public :: get_usr_args, user_in, results_out, auto_results
 contains
 
   subroutine get_usr_args(method,calc_css)
@@ -98,5 +98,26 @@ contains
 
     call system('cat output.txt')
     deallocate(t)
+  end subroutine
+
+  subroutine auto_results(L,BJ,Mag,chi_s,Cv)
+    integer, intent(in)  :: L(:)
+    real(dp), intent(in) :: BJ(:), Mag(:,:), chi_s(:,:), Cv(:,:)
+    
+    character(40)        :: row_fmt, filename
+    integer              :: i, j, L_s, T_s
+
+    row_fmt  = '(F7.5,3X,F8.5,3X,F9.5,3X,F8.5)'
+    L_s = size(L)
+    T_s = size(BJ)
+    
+    do i=1,L_s
+      write(filename,'(A,I0,A)') 'results',L(i),'.dat'
+      open(12,file = filename)
+      do j=1,T_s
+        write(12,row_fmt) BJ(j), Mag(i,j), chi_s(i,j), Cv(i,j)
+      enddo
+      close(12)
+    enddo
   end subroutine
 end module

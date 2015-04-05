@@ -2,20 +2,9 @@ module initialize
   use constants
   implicit none
   private
-  public :: init_random_seed, init_lattice, init_vals
+  public :: init_random_seed, init_lattice
 
 contains
-  pure subroutine init_vals(dE_vals,BF_vals,BJ,h)
-    real(dp), intent(out) :: dE_vals(:,:), BF_vals(:,:)
-    real(dp), intent(in) :: BJ, h
-    integer :: i, j 
-
-    ! calculate possible values of dE and boltzmann factor 
-    forall (i=1:9,j=1:2) dE_vals(i,j) = - 2._dp*BJ*(i-5) - 2._dp*h*(j*2-3) 
-        
-    BF_vals = exp(-dE_vals)
-  end subroutine
-
   subroutine init_lattice(S, L)
     integer, intent(out)  :: S(:,:)
     real(dp), allocatable :: u(:,:)
@@ -29,7 +18,7 @@ contains
     where (u > 0.5_dp) S = 1
     deallocate(u)
   end subroutine 
-
+  
   ! initialize random seed, taken from ICCP github
   subroutine init_random_seed()
     integer, allocatable :: seed(:)

@@ -3,6 +3,7 @@ program main
   use initialize
   use markov
   use io
+  use plotroutines
   implicit none
   
   ! variables:
@@ -10,23 +11,25 @@ program main
   ! dE: change in energy between new and initial config
   ! S: array containing Spins indexed as row, column
 
-  real(dp), allocatable :: BE(:), c_ss(:), r(:), c_ss_fit(:)
-  real(dp)              :: BJ, nu, err_nu, chi_s, chi, err_chi, Mag, &
-                           err_Mag, Cv, err_Cv
-  integer, allocatable  :: S(:,:)
-  integer               :: runtime, L, method, r_max, n_corr
+  real(dp), allocatable :: BJ(:), chi_s(:,:), chi(:,:), err_chi(:,:), &
+                           Mag(:,:), err_Mag(:,:), Cv(:,:), err_Cv(:,:)
+  integer, allocatable  :: L(:) 
+  integer               :: method, L_s, T_s
   logical               :: calc_css
   
-  call get_usr_args(method,calc_css) 
-  call user_in(BJ,L,r_max,n_corr)
-  allocate(S(L,L),BE(n_meas),c_ss(r_max),c_ss_fit(r_max),r(r_max))
-  call init_random_seed()
-  call init_lattice(S,L)
-
-  call run_sim(S,method,r_max,n_corr,BE,BJ,r,Mag,err_Mag,runtime,&
-    calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s,chi,err_chi,Cv,err_Cv)
+  ! initialize variables
+  L_s = 6
+  T_s = 25
   
-  call results_out(BE,BJ,L,r,runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s, &
-    chi,err_chi,Mag,err_Mag,Cv,err_Cv)
-  deallocate(S,r,BE,c_ss,c_ss_fit)
+  allocate(L(L_s),BJ(T_s),chi_s(L_s,T_s),chi(L_s,T_s),err_chi(L_s,T_s),&
+    Mag(L_s,T_s),err_Mag(L_s,T_s),Cv(L_s,T_s),err_Cv(L_s,T_s))
+
+  call get_usr_args(method,calc_css) 
+  call init_random_seed()
+  call autorun_sim(method,L,BJ,Cv,err_Cv,Mag,err_Mag,chi_s,chi,err_chi)
+  call line_plot(BJ,chi_s(6,:),'BJ','chi','L=64','',1,chi_s(5,:),'L=32')
+  call line_plot(BJ,Cv(6,:),'BJ','Cv','L=64','',2,Cv(5,:),'L=32')
+  call auto_results(L,BJ,Mag,chi_s,Cv)
+
+  deallocate(L,BJ,chi_s,chi,err_chi,Mag,err_Mag,Cv,err_Cv)
 end program

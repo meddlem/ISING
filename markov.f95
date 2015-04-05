@@ -1,18 +1,52 @@
 module markov 
   use constants
+  use initialize
   use output_processing 
   use Wolff
   use Swendsen_Wang
   use plotroutines
   implicit none
   private
-  public :: run_sim
+  public :: autorun_sim
 
 contains
-  subroutine run_sim(S,method,r_max,n_corr,BE,BJ,r,Mag,err_Mag,runtime, &
+  subroutine autorun_sim(method,L,BJ,Cv,err_Cv,Mag,err_Mag,chi_s,chi,err_chi)
+    integer, intent(inout) :: L(:)
+    real(dp), intent(inout)   :: BJ(:)
+    integer, intent(in)    :: method
+    real(dp), intent(out)  :: chi_s(:,:), chi(:,:), err_chi(:,:), &
+      Mag(:,:), err_Mag(:,:), Cv(:,:), err_Cv(:,:)
+
+    integer, allocatable :: S(:,:)
+    integer :: i, j, L_s, T_s, runtime, r_max=1, n_corr=1
+    real(dp) :: nu, r(1), c_ss(1), c_ss_fit(1), err_nu
+    logical :: calc_css 
+
+    ! initialize
+    calc_css = .false.
+    L_s = size(L)
+    T_s = size(BJ)
+    forall(i=1:L_s) L(i) = 2**i
+    forall(j=1:T_s) BJ(j) = 0.4_dp + 0.005_dp*reaL((j-1),dp)
+    
+    ! iterate over temps, sizes 
+    do i = 1,L_s
+      allocate(S(L(i),L(i)))
+      print *, L(i)
+      do j = 1,T_s
+        call init_lattice(S,L(i))
+        call markov_chain(S,method,r_max,n_corr,BJ(j),r,Mag(i,j), &
+          err_Mag(i,j),runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s(i,j),&
+          chi(i,j),err_chi(i,j),Cv(i,j),err_Cv(i,j))
+      enddo
+      deallocate(S)
+    enddo
+  end subroutine
+
+  subroutine markov_chain(S,method,r_max,n_corr,BJ,r,Mag,err_Mag,runtime, &
       calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s,chi,err_chi,Cv,err_Cv)
     integer, intent(inout)  :: S(:,:)
-    real(dp), intent(inout) :: BE(:), BJ
+    real(dp), intent(inout) :: BJ
     integer, intent(in)     :: method, r_max, n_corr
     logical, intent(in)     :: calc_css
     integer, intent(out)    :: runtime
@@ -20,7 +54,7 @@ contains
       err_nu, chi_s, chi, err_chi, Cv, err_Cv
 
     integer(lng), allocatable :: N_SW(:), N_SW_2(:), m(:)
-    real(dp), allocatable     :: g(:,:)
+    real(dp), allocatable     :: g(:,:), BE(:)
     integer(lng) :: start_time, m_tmp, N_SW_tmp, N_SW_2_tmp, end_time
     integer      :: i, j, L
     real(dp)     :: p
@@ -35,7 +69,7 @@ contains
     p = 1 - exp(-2._dp*BJ)
     
     ! allocate memory
-    allocate(g(n_meas,r_max),N_SW(n_meas),N_SW_2(n_meas),m(n_meas))
+    allocate(g(n_meas,r_max),BE(n_meas),N_SW(n_meas),N_SW_2(n_meas),m(n_meas))
     
     call animate_lattice()
     call system_clock(start_time)
@@ -55,7 +89,7 @@ contains
       endif
 
       if (mod(i,plot_interval) == 0) then
-        call write_lattice(S,L) ! write lattice to pipe
+        !call write_lattice(S,L) ! write lattice to pipe
       endif
     enddo    
     
@@ -70,7 +104,7 @@ contains
     ! calculate runtime
     runtime = (end_time - start_time)/1000
 
-    deallocate(g,N_SW,N_SW_2,m)
+    deallocate(g,BE,N_SW,N_SW_2,m)
   end subroutine
 
   subroutine gen_config(S,L,m,N_SW,N_SW_2,p,method)
