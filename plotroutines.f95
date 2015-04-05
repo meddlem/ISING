@@ -97,7 +97,7 @@ contains
     close(10)
     
     ! create gnuplot command file
-    write(filename,'(A,I1,A)') 'set output "plot',plot_no,'.png"'
+    write(filename,'(A,I0,A)') 'set output "plot',plot_no,'.png"'
     open(10,access = 'sequential',file = 'gplot.txt')
       
       ! set output terminal  

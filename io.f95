@@ -107,7 +107,7 @@ contains
     character(40)        :: row_fmt, filename
     integer              :: i, j, L_s, T_s
 
-    row_fmt  = '(F7.5,3X,F8.5,3X,F9.5,3X,F8.5)'
+    row_fmt  = '(F7.5,3X,F8.5,3X,F10.5,3X,F8.5)'
     L_s = size(L)
     T_s = size(BJ)
     

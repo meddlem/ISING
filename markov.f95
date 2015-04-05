@@ -18,21 +18,20 @@ contains
       Mag(:,:), err_Mag(:,:), Cv(:,:), err_Cv(:,:)
 
     integer, allocatable :: S(:,:)
-    integer :: i, j, L_s, T_s, runtime, r_max=1, n_corr=1
+    integer :: i, j, L_s, T_s, runtime, r_max, n_corr
     real(dp) :: nu, r(1), c_ss(1), c_ss_fit(1), err_nu
     logical :: calc_css 
 
     ! initialize
     calc_css = .false.
-    L_s = size(L)
-    T_s = size(BJ)
-    forall(i=1:L_s) L(i) = 2**i
-    forall(j=1:T_s) BJ(j) = 0.4_dp + 0.005_dp*reaL((j-1),dp)
+    r_max = 1
+    n_corr = 1
+    call init_LT(L,L_s,BJ,T_s)
     
     ! iterate over temps, sizes 
     do i = 1,L_s
       allocate(S(L(i),L(i)))
-      print *, L(i)
+      write(*,'(A,I0)') 'L= ', L(i)
       do j = 1,T_s
         call init_lattice(S,L(i))
         call markov_chain(S,method,r_max,n_corr,BJ(j),r,Mag(i,j), &
