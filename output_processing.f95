@@ -2,10 +2,11 @@ module output_processing
   use constants
   implicit none
   private 
-  public :: calc_chi, calc_corr_function, calc_spec_heat 
+  public :: calc_M_chi, calc_corr_function, calc_spec_heat 
 
 contains
-  pure subroutine calc_chi(L,N_SW,N_SW_2,m,Mag,err_Mag,chi_s,chi,err_chi,method)
+  pure subroutine calc_M_chi(L,N_SW,N_SW_2,m,Mag,err_Mag,chi_s,chi,err_chi,&
+      method)
     ! calculates magnetization and susceptibility
     integer, intent(in)      :: L, method
     integer(lng), intent(in) :: m(:), N_SW(:), N_SW_2(:)

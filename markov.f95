@@ -1,70 +1,14 @@
 module markov 
   use constants
-  use initialize
   use output_processing 
-  use io
   use Wolff
   use Swendsen_Wang
   use plotroutines
   implicit none
   private
-  public :: singlerun, autorun
+  public :: markov_chain 
 
 contains
-  subroutine singlerun(method,calc_css,auto)
-    integer, intent(in) :: method
-    logical, intent(in) :: calc_css, auto
-
-    real(dp), allocatable :: c_ss(:), r(:), c_ss_fit(:)
-    real(dp)              :: BJ, nu, err_nu, chi_s, chi, err_chi, Mag, &
-                             err_Mag, Cv, err_Cv
-    integer, allocatable  :: S(:,:)
-    integer               :: runtime, L, r_max, n_corr
-
-    call user_in(auto,L,r_max,n_corr,BJ)
-    allocate(S(L,L),c_ss(r_max),c_ss_fit(r_max),r(r_max))
-    call init_lattice(S,L)
-
-    call markov_chain(S,method,auto,r_max,n_corr,BJ,r,Mag,err_Mag,runtime,&
-      calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s,chi,err_chi,Cv,err_Cv)
-    
-    call results_out(BJ,L,r,runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,&
-      chi_s,chi,err_chi,Mag,err_Mag,Cv,err_Cv)
-    deallocate(S,r,c_ss,c_ss_fit) 
-  end subroutine
-
-  subroutine autorun(method,auto)
-    integer, intent(in) :: method
-    logical, intent(in) :: auto
-    
-    integer, allocatable  :: S(:,:)
-    real(dp), allocatable :: BJ(:), chi_s(:), chi(:), err_chi(:), Mag(:), &
-      err_Mag(:), Cv(:), err_Cv(:), Q(:)
-    integer  :: i, L, T_s=51, runtime, r_max, n_corr
-    real(dp) :: nu, r(1), c_ss(1), c_ss_fit(1), err_nu
-    logical  :: calc_css = .false.
-
-    ! initialize
-    call user_in(auto,L,r_max,n_corr)
-    allocate(S(L,L),BJ(T_s),chi_s(T_s),chi(T_s),err_chi(T_s),Mag(T_s),&
-      err_Mag(T_s),Cv(T_s),err_Cv(T_s),Q(T_s))
-    call init_lattice(S,L)
-    call init_BJ(T_s,BJ)
-    
-    ! iterate over temperatures, ask temp range from user?
-    do i = 1,T_s
-      call markov_chain(S,method,auto,r_max,n_corr,BJ(i),r,Mag(i),err_Mag(i),&
-        runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s(i),chi(i),err_chi(i),&
-        Cv(i),err_Cv(i))
-
-      ! move this into markov chain routine?
-      Q(i) = chi_s(i)/(real(L,dp)**2*Mag(i)**2) + 1._dp
-    enddo
-    
-    call auto_results(L,BJ,Q,Mag,chi_s,Cv)
-    deallocate(S,BJ,chi_s,chi,err_chi,Mag,err_Mag,Cv,err_Cv,Q)
-  end subroutine
-
   subroutine markov_chain(S,method,auto,r_max,n_corr,BJ,r,Mag,err_Mag,&
       runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s,chi,err_chi,Cv,err_Cv)
     integer, intent(inout)  :: S(:,:)
@@ -119,7 +63,7 @@ contains
     call close_lattice_plot()
     
     ! calculate ensemble averages
-    call calc_chi(L,N_SW,N_SW_2,m,Mag,err_Mag,chi_s,chi,err_chi,method)
+    call calc_M_chi(L,N_SW,N_SW_2,m,Mag,err_Mag,chi_s,chi,err_chi,method)
     call calc_spec_heat(BE,L,Cv,err_Cv)
     if (calc_css) call calc_corr_function(g,r,c_ss_fit,c_ss,nu,err_nu)
     

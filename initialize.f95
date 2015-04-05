@@ -2,7 +2,7 @@ module initialize
   use constants
   implicit none
   private
-  public :: init_random_seed, init_lattice, init_BJ
+  public :: init_random_seed, init_lattice, init_BJ_vals
 
 contains
   subroutine init_lattice(S, L)
@@ -19,7 +19,7 @@ contains
     deallocate(u)
   end subroutine 
 
-  pure subroutine init_BJ(T_s,BJ)
+  pure subroutine init_BJ_vals(T_s,BJ)
     real(dp), intent(out) :: BJ(:)
     integer, intent(in)   :: T_s
 
