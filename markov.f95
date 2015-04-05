@@ -11,9 +11,9 @@ module markov
   public :: singlerun, autorun
 
 contains
-  subroutine singlerun(method,calc_css)
+  subroutine singlerun(method,calc_css,auto)
     integer, intent(in) :: method
-    logical, intent(in) :: calc_css 
+    logical, intent(in) :: calc_css, auto
 
     real(dp), allocatable :: c_ss(:), r(:), c_ss_fit(:)
     real(dp)              :: BJ, nu, err_nu, chi_s, chi, err_chi, Mag, &
@@ -26,7 +26,7 @@ contains
     call init_random_seed()
     call init_lattice(S,L)
 
-    call markov_chain(S,method,r_max,n_corr,BJ,r,Mag,err_Mag,runtime,&
+    call markov_chain(S,method,auto,r_max,n_corr,BJ,r,Mag,err_Mag,runtime,&
       calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s,chi,err_chi,Cv,err_Cv)
     
     call results_out(BJ,L,r,runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,&
@@ -34,20 +34,21 @@ contains
     deallocate(S,r,c_ss,c_ss_fit) 
   end subroutine
 
-  subroutine autorun(method)
-    integer, intent(in)    :: method
+  subroutine autorun(method,auto)
+    integer, intent(in) :: method
+    logical, intent(in) :: auto
     
     integer, allocatable  :: S(:,:), L(:)
     real(dp), allocatable :: BJ(:), chi_s(:,:), chi(:,:), err_chi(:,:), &
       Mag(:,:), err_Mag(:,:), Cv(:,:), err_Cv(:,:)
     integer  :: i, j, L_s, T_s, runtime, r_max, n_corr
     real(dp) :: nu, r(1), c_ss(1), c_ss_fit(1), err_nu
-    logical  :: calc_css 
+    logical  :: calc_css
 
     ! initialize
     L_s = 6
-    T_s = 26
     calc_css = .false.
+    T_s = 26
     r_max = 1
     n_corr = 1
     
@@ -61,7 +62,7 @@ contains
       write(*,'(A,I0)') 'L= ', L(i)
       do j = 1,T_s
         call init_lattice(S,L(i))
-        call markov_chain(S,method,r_max,n_corr,BJ(j),r,Mag(i,j), &
+        call markov_chain(S,method,auto,r_max,n_corr,BJ(j),r,Mag(i,j), &
           err_Mag(i,j),runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s(i,j),&
           chi(i,j),err_chi(i,j),Cv(i,j),err_Cv(i,j))
       enddo
@@ -71,12 +72,12 @@ contains
     deallocate(L,BJ,chi_s,chi,err_chi,Mag,err_Mag,Cv,err_Cv)
   end subroutine
 
-  subroutine markov_chain(S,method,r_max,n_corr,BJ,r,Mag,err_Mag,runtime, &
+  subroutine markov_chain(S,method,auto,r_max,n_corr,BJ,r,Mag,err_Mag,runtime, &
       calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s,chi,err_chi,Cv,err_Cv)
     integer, intent(inout)  :: S(:,:)
     real(dp), intent(inout) :: BJ
     integer, intent(in)     :: method, r_max, n_corr
-    logical, intent(in)     :: calc_css
+    logical, intent(in)     :: calc_css, auto
     integer, intent(out)    :: runtime
     real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), Mag, err_Mag, nu, &
       err_nu, chi_s, chi, err_chi, Cv, err_Cv
@@ -116,8 +117,8 @@ contains
         call calc_energy(BE(j),S,L,BJ)
       endif
 
-      if (mod(i,plot_interval) == 0) then
-        !call write_lattice(S,L) ! write lattice to pipe
+      if ((mod(i,plot_interval) == 0) .and. (.not. auto)) then
+        call write_lattice(S,L) ! write lattice to pipe
       endif
     enddo    
     

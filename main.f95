@@ -12,8 +12,8 @@ program main
   call init_random_seed()
 
   if (auto) then 
-    call autorun(method)
+    call autorun(method,auto)
   else 
-    call singlerun(method,calc_css)
+    call singlerun(method,calc_css,auto)
   endif
 end program
