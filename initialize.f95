@@ -19,17 +19,15 @@ contains
     deallocate(u)
   end subroutine 
 
-  pure subroutine init_LT(L,L_s,BJ,T_s)
+  pure subroutine init_LT(L_s,T_s,L,BJ)
     real(dp), intent(out) :: BJ(:)
-    integer, intent(out)  :: L(:), L_s, T_s
+    integer, intent(out)  :: L(:)
+    integer, intent(in)   :: L_s, T_s
 
     integer :: i
 
-    L_s = size(L)
-    T_s = size(BJ)
-
     forall(i=1:L_s) L(i) = 2**i
-    forall(i=1:T_s) BJ(i) = 0.44_dp + 0.0015_dp*(i-10)
+    forall(i=1:T_s) BJ(i) = 0.44_dp + 0.002_dp*(i-10)
   end subroutine
   
   ! initialize random seed, taken from ICCP github

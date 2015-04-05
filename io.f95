@@ -6,26 +6,29 @@ module io
   public :: get_usr_args, user_in, results_out, auto_results
 contains
 
-  subroutine get_usr_args(method,calc_css)
+  subroutine get_usr_args(method,calc_css,auto)
     integer, intent(out) :: method
-    logical, intent(out) :: calc_css 
+    logical, intent(out) :: calc_css, auto
     
     character(10) :: arg
     integer       :: i
 
     ! defaults
     method = 2 ! use wolff by default
+    auto = .false.
     calc_css = .false.
 
     ! check command line arguments
     do i=1,iargc()
       call getarg(i,arg)
-      if ((trim(arg) == '--SW') .or. (trim(arg) == '-S')) then
+      if ((trim(arg) == '--SW') .or. (trim(arg) == '-s')) then
         method = 1
-      elseif ((trim(arg) == '--Wolff') .or. (trim(arg) == '-W')) then
+      elseif ((trim(arg) == '--Wolff') .or. (trim(arg) == '-w')) then
         method = 2
       elseif (trim(arg) == '-c') then
         calc_css = .true.
+      elseif (trim(arg) == '-a') then
+        auto = .true.
       endif
     enddo
   end subroutine
@@ -46,9 +49,9 @@ contains
     r_max = L/4 ! distances over which to calc correlation function
   end subroutine
 
-  subroutine results_out(BE,BJ,L,r,runtime,calc_css,c_ss,c_ss_fit,nu,err_nu, &
+  subroutine results_out(BJ,L,r,runtime,calc_css,c_ss,c_ss_fit,nu,err_nu, &
       chi_s,chi,err_chi,Mag,err_Mag,Cv,err_Cv) 
-    real(dp), intent(in) :: BE(:), BJ, r(:), c_ss(:), c_ss_fit(:), &
+    real(dp), intent(in) :: BJ, r(:), c_ss(:), c_ss_fit(:), &
       nu, err_nu, chi_s, chi, err_chi, Mag, err_Mag, Cv, err_Cv
     logical, intent(in)  :: calc_css
     integer, intent(in)  :: L, runtime
@@ -79,8 +82,6 @@ contains
     close(12)
     
     ! plot results
-    call line_plot(real(t,dp),BE,'t','energy','','',1)
-    
     if (calc_css) then
       call line_plot(r,c_ss,'r','corr','corr','',3,c_ss_fit,'fit')
     endif

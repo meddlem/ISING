@@ -2,31 +2,58 @@ module markov
   use constants
   use initialize
   use output_processing 
+  use io
   use Wolff
   use Swendsen_Wang
   use plotroutines
   implicit none
   private
-  public :: autorun_sim
+  public :: singlerun, autorun
 
 contains
-  subroutine autorun_sim(method,L,BJ,Cv,err_Cv,Mag,err_Mag,chi_s,chi,err_chi)
-    integer, intent(inout) :: L(:)
-    real(dp), intent(inout)   :: BJ(:)
-    integer, intent(in)    :: method
-    real(dp), intent(out)  :: chi_s(:,:), chi(:,:), err_chi(:,:), &
-      Mag(:,:), err_Mag(:,:), Cv(:,:), err_Cv(:,:)
+  subroutine singlerun(method,calc_css)
+    integer, intent(in) :: method
+    logical, intent(in) :: calc_css 
 
-    integer, allocatable :: S(:,:)
-    integer :: i, j, L_s, T_s, runtime, r_max, n_corr
+    real(dp), allocatable :: c_ss(:), r(:), c_ss_fit(:)
+    real(dp)              :: BJ, nu, err_nu, chi_s, chi, err_chi, Mag, &
+                             err_Mag, Cv, err_Cv
+    integer, allocatable  :: S(:,:)
+    integer               :: runtime, L, r_max, n_corr
+
+    call user_in(BJ,L,r_max,n_corr)
+    allocate(S(L,L),c_ss(r_max),c_ss_fit(r_max),r(r_max))
+    call init_random_seed()
+    call init_lattice(S,L)
+
+    call markov_chain(S,method,r_max,n_corr,BJ,r,Mag,err_Mag,runtime,&
+      calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s,chi,err_chi,Cv,err_Cv)
+    
+    call results_out(BJ,L,r,runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,&
+      chi_s,chi,err_chi,Mag,err_Mag,Cv,err_Cv)
+    deallocate(S,r,c_ss,c_ss_fit) 
+  end subroutine
+
+  subroutine autorun(method)
+    integer, intent(in)    :: method
+    
+    integer, allocatable  :: S(:,:), L(:)
+    real(dp), allocatable :: BJ(:), chi_s(:,:), chi(:,:), err_chi(:,:), &
+      Mag(:,:), err_Mag(:,:), Cv(:,:), err_Cv(:,:)
+    integer  :: i, j, L_s, T_s, runtime, r_max, n_corr
     real(dp) :: nu, r(1), c_ss(1), c_ss_fit(1), err_nu
-    logical :: calc_css 
+    logical  :: calc_css 
 
     ! initialize
+    L_s = 6
+    T_s = 26
     calc_css = .false.
     r_max = 1
     n_corr = 1
-    call init_LT(L,L_s,BJ,T_s)
+    
+    allocate(L(L_s),BJ(T_s),chi_s(L_s,T_s),chi(L_s,T_s),err_chi(L_s,T_s),&
+      Mag(L_s,T_s),err_Mag(L_s,T_s),Cv(L_s,T_s),err_Cv(L_s,T_s))
+    call init_LT(L_s,T_s,L,BJ)
     
     ! iterate over temps, sizes 
     do i = 1,L_s
@@ -38,8 +65,10 @@ contains
           err_Mag(i,j),runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s(i,j),&
           chi(i,j),err_chi(i,j),Cv(i,j),err_Cv(i,j))
       enddo
-      deallocate(S)
+      deallocate(S)   
     enddo
+    call auto_results(L,BJ,Mag,chi_s,Cv)
+    deallocate(L,BJ,chi_s,chi,err_chi,Mag,err_Mag,Cv,err_Cv)
   end subroutine
 
   subroutine markov_chain(S,method,r_max,n_corr,BJ,r,Mag,err_Mag,runtime, &
@@ -77,7 +106,7 @@ contains
     do i=1,steps
       call gen_config(S,L,m_tmp,N_SW_tmp,N_SW_2_tmp,p,method)
 
-      if (i >= meas_start) then
+      if (i > meas_start) then
         j = j+1
         m(j) = m_tmp ! record magnetization
         N_SW(j) = N_SW_tmp ! record clustersize
