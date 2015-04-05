@@ -12,8 +12,9 @@ module constants
   ! plot_interval: plot every .. iterations
 
   ! NOTE: IF YOU MAKE ANY CHANGES HERE RECOMPILE ALL MODULES: "make -B" 
-  integer, parameter :: dp = selected_real_kind(15,307)
-  integer, parameter :: lng = selected_int_kind(8)
+  integer, parameter  :: dp = selected_real_kind(15,307)
+  integer, parameter  :: lng = selected_int_kind(8)
+  real(dp), parameter :: BJ_c = 0.44_dp 
 
   integer, parameter :: steps = 8000 
   integer, parameter :: n_avg = 100

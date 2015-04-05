@@ -9,14 +9,14 @@ module markov
   public :: markov_chain 
 
 contains
-  subroutine markov_chain(S,method,auto,r_max,n_corr,BJ,r,Mag,err_Mag,&
+  subroutine markov_chain(S,method,auto,r_max,n_corr,BJ,r,Q,Mag,err_Mag,&
       runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s,chi,err_chi,Cv,err_Cv)
     integer, intent(inout)  :: S(:,:)
     real(dp), intent(inout) :: BJ
     integer, intent(in)     :: method, r_max, n_corr
     logical, intent(in)     :: calc_css, auto
     integer, intent(out)    :: runtime
-    real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), Mag, err_Mag, nu, &
+    real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), Q, Mag, err_Mag, nu, &
       err_nu, chi_s, chi, err_chi, Cv, err_Cv
 
     integer(lng), allocatable :: N_SW(:), N_SW_2(:), m(:)
@@ -34,7 +34,6 @@ contains
     r = real((/(i,i=1,r_max)/),dp)
     p = 1 - exp(-2._dp*BJ)
     
-    ! allocate memory
     allocate(g(n_meas,r_max),BE(n_meas),N_SW(n_meas),N_SW_2(n_meas),m(n_meas))
     
     call animate_lattice()
@@ -63,11 +62,10 @@ contains
     call close_lattice_plot()
     
     ! calculate ensemble averages
-    call calc_M_chi(L,N_SW,N_SW_2,m,Mag,err_Mag,chi_s,chi,err_chi,method)
+    call calc_M_chi(L,N_SW,N_SW_2,m,Q,Mag,err_Mag,chi_s,chi,err_chi,method)
     call calc_spec_heat(BE,L,Cv,err_Cv)
     if (calc_css) call calc_corr_function(g,r,c_ss_fit,c_ss,nu,err_nu)
     
-    ! calculate runtime
     runtime = (end_time - start_time)/1000
 
     deallocate(g,BE,N_SW,N_SW_2,m)

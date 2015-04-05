@@ -5,12 +5,12 @@ module output_processing
   public :: calc_M_chi, calc_corr_function, calc_spec_heat 
 
 contains
-  pure subroutine calc_M_chi(L,N_SW,N_SW_2,m,Mag,err_Mag,chi_s,chi,err_chi,&
+  pure subroutine calc_M_chi(L,N_SW,N_SW_2,m,Q,Mag,err_Mag,chi_s,chi,err_chi,&
       method)
     ! calculates magnetization and susceptibility
     integer, intent(in)      :: L, method
     integer(lng), intent(in) :: m(:), N_SW(:), N_SW_2(:)
-    real(dp), intent(out) :: Mag, err_Mag, chi, chi_s, err_chi
+    real(dp), intent(out)    :: Q, Mag, err_Mag, chi, chi_s, err_chi
 
     real(dp) :: N_SW_mean, N
     real(dp), allocatable :: m_r(:)
@@ -34,6 +34,7 @@ contains
       err_chi = std_err(real(N_SW,dp)/N)
     endif
 
+    Q = chi_s/(N*Mag**2) + 1._dp
     chi_s = (sum(abs(m_r)**2)/n_meas - sum(abs(m_r)/n_meas)**2)/N
     ! also calculate the error for chi_s..
     err_Mag = std_err(m_r/N)

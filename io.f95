@@ -27,7 +27,7 @@ contains
         method = 2
       elseif (trim(arg) == '-c') then
         calc_css = .true.
-      elseif (trim(arg) == '-a') then
+      elseif (trim(arg) == '-a' .or. (trim(arg) == '--Auto')) then
         auto = .true.
       endif
     enddo

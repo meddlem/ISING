@@ -19,13 +19,12 @@ contains
     deallocate(u)
   end subroutine 
 
-  pure subroutine init_BJ_vals(T_s,BJ)
+  pure subroutine init_BJ_vals(BJ_steps,BJ)
     real(dp), intent(out) :: BJ(:)
-    integer, intent(in)   :: T_s
-
+    integer, intent(in)   :: BJ_steps
     integer :: i
 
-    forall(i=1:T_s) BJ(i) = 0.44_dp + 0.002_dp*(i-T_s/2)
+    forall(i=1:BJ_steps) BJ(i) = BJ_c + 0.002_dp*(i-BJ_steps/2)
   end subroutine
   
   ! initialize random seed, taken from ICCP github
