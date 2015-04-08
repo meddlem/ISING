@@ -36,7 +36,7 @@ contains
     
     allocate(g(n_meas,r_max),BE(n_meas),N_SW(n_meas),N_SW_2(n_meas),m(n_meas))
     
-    call animate_lattice()
+    if (.not. auto) call animate_lattice()
     call system_clock(start_time)
     
     ! run markov chain
@@ -59,7 +59,7 @@ contains
     enddo    
     
     call system_clock(end_time)
-    call close_lattice_plot()
+    if (.not. auto) call close_lattice_plot()
     
     ! calculate ensemble averages
     call calc_M_chi(L,N_SW,N_SW_2,m,Q,Mag,err_Mag,chi_s,chi,err_chi,method)

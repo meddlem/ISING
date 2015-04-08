@@ -5,6 +5,7 @@ module output_processing
   public :: calc_M_chi, calc_corr_function, calc_spec_heat 
 
 contains
+  
   pure subroutine calc_M_chi(L,N_SW,N_SW_2,m,Q,Mag,err_Mag,chi_s,chi,err_chi,&
       method)
     ! calculates magnetization and susceptibility
