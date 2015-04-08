@@ -59,7 +59,7 @@ contains
     call init_lattice(S,L)
     call init_BJ_vals(BJ_s,BJ)
     
-    ! iterate over temperatures, ask temp range from user?
+    ! iterate over temperatures, ask temp range from user? not necessary as long as range and resolution is adequate.
     do i = 1,BJ_s
       write(*,'(A,F6.3)') 'BJ= ', BJ(i)
 
