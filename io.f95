@@ -53,9 +53,9 @@ contains
   end subroutine
 
   subroutine results_out(BJ,L,r,runtime,calc_css,c_ss,c_ss_fit,nu,err_nu, &
-      chi_s,chi,err_chi,Mag,err_Mag,Cv,err_Cv) 
+      chi_s,chi_s_err,chi,err_chi,Mag,err_Mag,Cv,err_Cv) 
     real(dp), intent(in) :: BJ, r(:), c_ss(:), c_ss_fit(:), &
-      nu, err_nu, chi_s, chi, err_chi, Mag, err_Mag, Cv, err_Cv
+      nu, err_nu, chi_s, chi_s_err, chi, err_chi, Mag, err_Mag, Cv, err_Cv
     logical, intent(in)  :: calc_css
     integer, intent(in)  :: L, runtime
 
@@ -79,7 +79,7 @@ contains
       write(12,output_fmt) "specific heat", Cv, " ± ", err_Cv 
       write(12,output_fmt) "Magnetization", Mag, " ± ", err_Mag
       write(12,output_fmt) "unsubtracted susceptibility", chi, " ± ", err_chi
-      write(12,output_fmt) "susceptibility", chi_s, " ± ", err_chi 
+      write(12,output_fmt) "susceptibility", chi_s, " ± ", chi_s_err 
       if (calc_css) write(12,output_fmt) "nu: ", nu, " ± ", err_nu 
       write(12,'(/,A,/)') '*******************************' 
     close(12)

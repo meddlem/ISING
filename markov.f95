@@ -10,14 +10,14 @@ module markov
 
 contains
   subroutine markov_chain(S,method,auto,r_max,n_corr,BJ,r,Q,Mag,err_Mag,&
-      runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s,chi,err_chi,Cv,err_Cv)
+      runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s,chi_s_err,chi,err_chi,Cv,err_Cv)
     integer, intent(inout)  :: S(:,:)
     real(dp), intent(inout) :: BJ
     integer, intent(in)     :: method, r_max, n_corr
     logical, intent(in)     :: calc_css, auto
     integer, intent(out)    :: runtime
     real(dp), intent(out)   :: c_ss(:), r(:), c_ss_fit(:), Q, Mag, err_Mag, nu, &
-      err_nu, chi_s, chi, err_chi, Cv, err_Cv
+      err_nu, chi_s, chi_s_err, chi, err_chi, Cv, err_Cv
 
     integer(lng), allocatable :: N_SW(:), N_SW_2(:), m(:)
     real(dp), allocatable     :: g(:,:), BE(:)
@@ -62,7 +62,7 @@ contains
     if (.not. auto) call close_lattice_plot()
     
     ! calculate ensemble averages
-    call calc_M_chi(L,N_SW,N_SW_2,m,Q,Mag,err_Mag,chi_s,chi,err_chi,method)
+    call calc_M_chi(L,N_SW,N_SW_2,m,Q,Mag,err_Mag,chi_s,chi_s_err,chi,err_chi,method)
     call calc_spec_heat(BE,L,Cv,err_Cv)
     if (calc_css) call calc_corr_function(g,r,c_ss_fit,c_ss,nu,err_nu)
     

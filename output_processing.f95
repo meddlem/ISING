@@ -6,15 +6,16 @@ module output_processing
 
 contains
 
-  pure subroutine calc_M_chi(L,N_SW,N_SW_2,m,Q,Mag,err_Mag,chi_s,chi,err_chi,&
+  pure subroutine calc_M_chi(L,N_SW,N_SW_2,m,Q,Mag,err_Mag,chi_s,chi_s_err,chi,err_chi,&
       method)
     ! calculates magnetization and susceptibility
     integer, intent(in)      :: L, method
     integer(lng), intent(in) :: m(:), N_SW(:), N_SW_2(:)
-    real(dp), intent(out)    :: Q, Mag, err_Mag, chi, chi_s, err_chi
+    real(dp), intent(out)    :: Q, Mag, err_Mag, chi, chi_s, err_chi, chi_s_err
 
-    real(dp) :: N_SW_mean, N
+    real(dp) :: N_SW_mean, N, abs_m_r_block(n_avg), chi_s_block(n_blocks)
     real(dp), allocatable :: m_r(:)
+    integer :: i
 
     allocate(m_r(n_meas))
 
@@ -37,7 +38,12 @@ contains
 
     chi_s = (sum(abs(m_r)**2)/n_meas - sum(abs(m_r)/n_meas)**2)/N
     Q = chi_s/(N*Mag**2) + 1._dp
-    ! also calculate the error for chi_s..
+    do i=1,n_blocks ! error for chi_s
+      call extract_block(abs(m_r), abs_m_r_block, i)
+      chi_s_block(i) = (sum(abs_m_r_block**2)/n_avg - sum(abs_m_r_block/n_avg)**2)/N
+    end do
+    chi_s_err = std_err(chi_s_block, .true.)
+
     err_Mag = std_err(m_r/N)
     deallocate(m_r)
   end subroutine
@@ -71,16 +77,29 @@ contains
     c_ss_fit = exp(-offset)*r**(-nu)
   end subroutine 
     
-  pure function std_err(A)
+  pure function std_err(A, blockmode)
     ! calculates std error of A from blocked data
     real(dp), intent(in) :: A(:)
     real(dp) :: std_err, sigma_blocks_2, Avg(n_blocks)
+    logical, intent(in), optional  :: blockmode
 
-    Avg = block_avg(A)
+    if (present(blockmode) .and. (blockmode .eqv. .true.)) then
+      Avg = A
+    else
+      Avg = block_avg(A)
+    end if
   
     sigma_blocks_2 = sum((Avg - sum(Avg)/n_blocks)**2)/(n_blocks-1)
     std_err = sqrt(sigma_blocks_2/n_blocks)
   end function
+
+  pure subroutine extract_block(input, block, block_nr)
+    real(dp), intent(in) :: input(:)
+    real(dp), intent(out) :: block(n_avg)
+    integer, intent(in):: block_nr   
+
+    block = input(n_avg*(block_nr-1)+1:n_avg*(block_nr))
+  end subroutine
 
   pure function block_avg(A)
     ! returns array containing block average of A
