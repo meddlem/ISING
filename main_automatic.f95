@@ -74,7 +74,7 @@ contains
     real(dp), intent(in)  :: Uc(:,:), BJ(:)
     real(dp), intent(out) :: BJc
     integer               :: i,j,k, N_lattices
-    real(dp)              :: MeanUc, er(size(BJ))
+    real(dp)              :: MeanUc(size(BJ)), er(size(BJ))
 
     er = 0
     N_lattices = size(BJ)
