@@ -60,14 +60,14 @@ contains
     integer, intent(in)  :: L, runtime
 
     real(dp), allocatable :: t(:)
-    character(30)         :: output_fmt, row_fmt
+    character(40)         :: output_fmt, row_fmt
     integer               :: i
     logical               :: exs
 
     allocate(t(n_meas))
     ! init
     forall(i=0:n_meas-1) t(i+1) = real(i,dp)
-    output_fmt = '(A,T25,F9.4,A,F8.4)'
+    output_fmt = '(A,T30,F9.4,A,F8.4)'
     row_fmt  = '(F7.5,3X,F8.5,3X,F8.5,3X,F8.5)'
     
     open(12,access = 'sequential',file = 'output.txt')
