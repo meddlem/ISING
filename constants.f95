@@ -18,14 +18,14 @@ module constants
   integer, parameter  :: dp = selected_real_kind(15,307)
   integer, parameter  :: lng = selected_int_kind(8)
 
-  integer, parameter :: steps = 10000 
+  integer, parameter :: steps = 20000 
   integer, parameter :: n_avg = 100
-  integer, parameter :: meas_start = 5000
+  integer, parameter :: meas_start = 4000
   integer, parameter :: n_meas = steps - meas_start 
   integer, parameter :: n_blocks = n_meas/n_avg 
   integer, parameter :: plot_interval = 99 
 
-  integer, parameter  :: BJ_st = 41 
+  integer, parameter  :: BJ_st = 51 
   real(dp), parameter :: BJ_c = 0.44_dp 
-  real(dp), parameter :: BJ_intv = 0.004_dp 
+  real(dp), parameter :: BJ_intv = 0.002_dp 
 end module

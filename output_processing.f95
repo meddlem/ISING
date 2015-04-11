@@ -41,7 +41,8 @@ contains
     chi_s = (sum(abs(m_r)**2)/n_meas - sum(abs(m_r)/n_meas)**2)/N
     do i=1,n_blocks ! error for chi_s
       call extract_block(abs(m_r), abs_m_r_block, i)
-      chi_s_block(i) = (sum(abs_m_r_block**2)/n_avg - sum(abs_m_r_block/n_avg)**2)/N
+      chi_s_block(i) = (sum(abs_m_r_block**2)/n_avg - &
+        sum(abs_m_r_block/n_avg)**2)/N
     end do
     chi_s_err = std_err(chi_s_block, .true.)
 
