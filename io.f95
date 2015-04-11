@@ -48,14 +48,14 @@ contains
     write(*,'(A)') "Running simulation..."
     
     ! set variables
-    n_corr = L/3 ! number of spins used to calculate correlation
+    n_corr = L/3 ! etamber of spins used to calculate correlation
     r_max = L/4 ! distances over which to calc correlation function
   end subroutine
 
-  subroutine results_out(BJ,L,r,runtime,calc_css,c_ss,c_ss_fit,nu,err_nu, &
+  subroutine results_out(BJ,L,r,runtime,calc_css,c_ss,c_ss_fit,eta,err_eta, &
       chi_s,chi_s_err,chi,err_chi,Mag,err_Mag,Cv,err_Cv) 
     real(dp), intent(in) :: BJ, r(:), c_ss(:), c_ss_fit(:), &
-      nu, err_nu, chi_s, chi_s_err, chi, err_chi, Mag, err_Mag, Cv, err_Cv
+      eta, err_eta, chi_s, chi_s_err, chi, err_chi, Mag, err_Mag, Cv, err_Cv
     logical, intent(in)  :: calc_css
     integer, intent(in)  :: L, runtime
 
@@ -80,13 +80,13 @@ contains
       write(12,output_fmt) "Magnetization", Mag, " ± ", err_Mag
       write(12,output_fmt) "unsubtracted susceptibility", chi, " ± ", err_chi
       write(12,output_fmt) "susceptibility", chi_s, " ± ", chi_s_err 
-      if (calc_css) write(12,output_fmt) "nu: ", nu, " ± ", err_nu 
+      if (calc_css) write(12,output_fmt) "eta: ", eta, " ± ", err_eta 
       write(12,'(/,A,/)') '*******************************' 
     close(12)
     
     ! plot results
     if (calc_css) then
-      call line_plot(r,c_ss,'r','corr','corr','',3,c_ss_fit,'fit')
+      call line_plot(r,c_ss,'r','corr','measurement','',3,c_ss_fit,'fit')
     endif
     
     ! append mag calculation result to file

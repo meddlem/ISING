@@ -23,7 +23,7 @@ contains
     logical, intent(in) :: calc_css, auto
 
     real(dp), allocatable :: c_ss(:), r(:), c_ss_fit(:)
-    real(dp)              :: BJ, Q, nu, err_nu, chi_s, chi_s_err, chi, err_chi, Mag, &
+    real(dp)              :: BJ, Q, eta, err_eta, chi_s, chi_s_err, chi, err_chi, Mag, &
                              err_Mag, Cv, err_Cv
     integer, allocatable  :: S(:,:)
     integer               :: runtime, L, r_max, n_corr
@@ -33,9 +33,9 @@ contains
     call init_lattice(S,L)
 
     call markov_chain(S,method,auto,r_max,n_corr,BJ,r,Q,Mag,err_Mag,runtime,&
-      calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s,chi_s_err,chi,err_chi,Cv,err_Cv)
+      calc_css,c_ss,c_ss_fit,eta,err_eta,chi_s,chi_s_err,chi,err_chi,Cv,err_Cv)
     
-    call results_out(BJ,L,r,runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,&
+    call results_out(BJ,L,r,runtime,calc_css,c_ss,c_ss_fit,eta,err_eta,&
       chi_s,chi_s_err,chi,err_chi,Mag,err_Mag,Cv,err_Cv)
     deallocate(S,r,c_ss,c_ss_fit) 
   end subroutine
@@ -49,7 +49,7 @@ contains
       err_chi(:), Mag(:), err_Mag(:), Cv(:), err_Cv(:), Q(:), r(:), c_ss(:), &
       c_ss_fit(:)
     integer  :: i, L, runtime, r_max, n_corr 
-    real(dp) :: nu, err_nu
+    real(dp) :: eta, err_eta
     logical  :: calc_css = .false.
 
     ! initialize
@@ -64,7 +64,7 @@ contains
       write(*,'(A,F6.3)') 'BJ= ', BJ(i)
 
       call markov_chain(S,method,auto,r_max,n_corr,BJ(i),r,Q(i),Mag(i), &
-        err_Mag(i),runtime,calc_css,c_ss,c_ss_fit,nu,err_nu,chi_s(i), &
+        err_Mag(i),runtime,calc_css,c_ss,c_ss_fit,eta,err_eta,chi_s(i), &
         chi_s_err(i),chi(i),err_chi(i),Cv(i),err_Cv(i))
     enddo
     

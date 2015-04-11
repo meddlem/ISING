@@ -25,8 +25,9 @@ contains
     
     ! calculate magnetization
     Mag = sum(abs(m_r))/(n_meas*N)
+    err_Mag = std_err(m_r/N)
 
-    ! calculate susceptibility
+    ! calculate unsubtracted susceptibility
     if (method==1) then
       chi = sum(real(N_SW_2,dp)/N**2)/n_meas
       err_chi = std_err(real(N_SW_2,dp)/N**2)
@@ -35,16 +36,17 @@ contains
       chi = N_SW_mean/N 
       err_chi = std_err(real(N_SW,dp)/N)
     endif
-
+    
+    ! susceptibility
     chi_s = (sum(abs(m_r)**2)/n_meas - sum(abs(m_r)/n_meas)**2)/N
-    Q = chi_s/(N*Mag**2) + 1._dp
     do i=1,n_blocks ! error for chi_s
       call extract_block(abs(m_r), abs_m_r_block, i)
       chi_s_block(i) = (sum(abs_m_r_block**2)/n_avg - sum(abs_m_r_block/n_avg)**2)/N
     end do
     chi_s_err = std_err(chi_s_block, .true.)
 
-    err_Mag = std_err(m_r/N)
+    ! calculate binder cumulant
+    Q = 1 - sum(m_r**4/n_meas)/(3._dp*(sum(m_r**2)/n_meas)**2)
     deallocate(m_r)
   end subroutine
 
@@ -65,16 +67,16 @@ contains
     err_Cv = sqrt(mu_BE_4)/N
   end subroutine
 
-  pure subroutine calc_corr_function(g,r,c_ss_fit,c_ss,nu,err_nu)
+  pure subroutine calc_corr_function(g,r,c_ss_fit,c_ss,eta,err_eta)
     ! calculate correlation function 
     real(dp), intent(in)  :: g(:,:), r(:)
-    real(dp), intent(out) :: c_ss(:), c_ss_fit(:), nu, err_nu
+    real(dp), intent(out) :: c_ss(:), c_ss_fit(:), eta, err_eta
     
     real(dp) :: offset
 
     c_ss = sum(g,1)/n_meas 
-    call lin_fit(nu,err_nu,offset,-log(c_ss),log(r))
-    c_ss_fit = exp(-offset)*r**(-nu)
+    call lin_fit(eta,err_eta,offset,-log(c_ss),log(r))
+    c_ss_fit = exp(-offset)*r**(-eta)
   end subroutine 
     
   pure function std_err(A, blockmode)

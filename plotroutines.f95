@@ -102,7 +102,7 @@ contains
       
       ! set output terminal  
       write(10,*) 'set term pngcairo size 640,480 enhanced font "Verdana,10"'
-      ! write(10,*) 'set term epscairo size 13cm,9cm font "Verdana,15"'
+      !write(10,*) 'set term epscairo size 15cm,9cm font "Verdana,15"'
 
       write(10,*) filename
       ! set line color definitions
