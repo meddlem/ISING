@@ -5,9 +5,8 @@ module output_processing
   public :: calc_M_chi, calc_corr_function, calc_spec_heat 
 
 contains
-
-  pure subroutine calc_M_chi(L,N_SW,N_SW_2,m,Q,Mag,err_Mag,chi_s,chi_s_err,chi,err_chi,&
-      method)
+  pure subroutine calc_M_chi(L,N_SW,N_SW_2,m,Q,Mag,err_Mag,chi_s,chi_s_err,&
+      chi,err_chi,method)
     ! calculates magnetization and susceptibility
     integer, intent(in)      :: L, method
     integer(lng), intent(in) :: m(:), N_SW(:), N_SW_2(:)
@@ -37,7 +36,7 @@ contains
       err_chi = std_err(real(N_SW,dp)/N)
     endif
     
-    ! susceptibility
+    ! calculate susceptibility
     chi_s = (sum(abs(m_r)**2)/n_meas - sum(abs(m_r)/n_meas)**2)/N
     do i=1,n_blocks ! error for chi_s
       call extract_block(abs(m_r), abs_m_r_block, i)
@@ -48,6 +47,7 @@ contains
 
     ! calculate binder cumulant
     Q = 1 - sum(m_r**4/n_meas)/(3._dp*(sum(m_r**2)/n_meas)**2)
+    
     deallocate(m_r)
   end subroutine
 

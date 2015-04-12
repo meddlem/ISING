@@ -61,7 +61,6 @@ contains
   
   pure function nn_idx(x, L)
     ! returns indices of nearest neighbors of x_ij, accounting for PBC
-    ! this module is also needed by calc_energy, placement here is not ideal
     integer, intent(in) :: x(2), L
     
     integer :: nn_idx(4,2)

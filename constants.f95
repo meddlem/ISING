@@ -25,7 +25,7 @@ module constants
   integer, parameter :: n_blocks = n_meas/n_avg 
   integer, parameter :: plot_interval = 99 
 
-  integer, parameter  :: BJ_st = 51 
+  integer, parameter  :: BJ_st = 51
   real(dp), parameter :: BJ_c = 0.44_dp 
   real(dp), parameter :: BJ_intv = 0.002_dp 
 end module

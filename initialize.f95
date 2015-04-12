@@ -9,7 +9,7 @@ contains
     integer, intent(out)  :: S(:,:)
     real(dp), allocatable :: u(:,:)
     integer, intent(in)   :: L
-    ! assign initial spins at random, corresponds to T=∞ 
+    ! assign initial spins at random, corresponds to T=Inf 
 
     allocate(u(L,L))
     call random_number(u)
