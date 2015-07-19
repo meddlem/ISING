@@ -5,7 +5,8 @@ module plotroutines
   public :: line_plot, write_lattice, close_lattice_plot, animate_lattice
 
 contains
-  subroutine animate_lattice(title)
+  subroutine animate_lattice(S,title)
+    integer, intent(in) :: S(:,:)
     character(*), intent(in) :: title
     integer :: ret
     
@@ -38,6 +39,9 @@ contains
     
     ! now fork instance of gnuplot to plot/animate the lattice
     call system("gnuplot matplot.plt &",ret)
+    
+    call write_lattice(S) ! write spin config to pipe
+
   end subroutine
   
   subroutine write_lattice(S)
